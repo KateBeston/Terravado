@@ -25,6 +25,7 @@ export interface EngineContext {
   clients: Client[];
   entities: Entity[];
   lenders: Lender[];
+  feasibilities: Feasibility[];
   settings: { country?: string; orgName?: string; advisorName?: string };
 }
 
@@ -803,6 +804,24 @@ export function equityChain(cfg: any, ctx: EngineContext) {
 /* ===========================================================================
    FEASIBILITY — value-add and development, with GST margin scheme
    =========================================================================== */
+let _fUid = 0;
+const fUid = (p = "id") => `${p}_${Date.now().toString(36)}${(_fUid++).toString(36)}`;
+
+export function blankFeasibility(): Feasibility {
+  return {
+    id: fUid("fs"), name: "New feasibility", type: "Development", propertyId: "",
+    country: "AU", region: "NSW",
+    landCost: 950000, landAcqCostsPct: 5.5, demolition: 35000,
+    units: [{ id: fUid("u"), name: "Townhouse A", count: 3, gfa: 150, buildRate: 2900, salePrice: 1150000 }],
+    profFeesPct: 8, authorityFees: 45000, contributions: 70000, headworks: 35000,
+    contingencyPct: 7, marketingPct: 1.2, sellingPct: 2.2,
+    buildMonths: 14, sellMonths: 8,
+    debtLVRpct: 65, debtLTCpct: 70, debtRate: 8.5, equityRate: 0, lineFeePct: 1.5,
+    gstApplies: true, marginScheme: true, gstOnLand: false,
+    targetMarginPct: 20, holdingRatesPa: 9000,
+  };
+}
+
 export function feasibility(f: Feasibility) {
   const C = COUNTRIES[f.country] || COUNTRIES.AU;
   const gstRate = C.gst;

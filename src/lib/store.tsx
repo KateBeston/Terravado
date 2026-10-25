@@ -43,6 +43,10 @@ interface StoreValue {
   updateLender: (id: string, mut: (l: any) => void) => void;
   addLender: () => void;
   deleteLender: (id: string) => void;
+  feasId: string | null;
+  setFeasId: (id: string | null) => void;
+  updateFeasibility: (id: string, mut: (f: any) => void) => void;
+  addFeasibility: () => void;
   bump: number;
 }
 
@@ -57,6 +61,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [view, setView] = useState<View>("portfolio");
   const [propertyId, setPropertyId] = useState<string | null>(() => data.properties[0]?.id ?? null);
   const [clientId, setClientId] = useState<string | null>(() => data.clients[0]?.id ?? null);
+  const [feasId, setFeasId] = useState<string | null>(() => data.feasibilities[0]?.id ?? null);
   const [bump, setBump] = useState(0);
 
   const updateProperty = useCallback((id: string, mut: (p: any) => void) => {
@@ -131,12 +136,27 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     setBump((b) => b + 1);
   }, [data]);
 
+  const updateFeasibility = useCallback((id: string, mut: (f: any) => void) => {
+    const f = data.feasibilities.find((x) => x.id === id);
+    if (f) { mut(f); setBump((b) => b + 1); }
+  }, [data]);
+
+  const addFeasibility = useCallback(() => {
+    const fresh = JSON.parse(JSON.stringify(data.feasibilities[0]));
+    fresh.id = uid("fs");
+    fresh.name = "New feasibility";
+    data.feasibilities.push(fresh);
+    setFeasId(fresh.id);
+    setBump((b) => b + 1);
+  }, [data]);
+
   const value = useMemo<StoreValue>(() => ({
     ctx: data, role, setRole, view, setView, propertyId, setPropertyId,
     updateProperty, duplicateProperty, deleteProperty, addProperty,
     clientId, setClientId, updateClient, addClient,
-    updateLender, addLender, deleteLender, bump,
-  }), [data, role, view, propertyId, updateProperty, duplicateProperty, deleteProperty, addProperty, clientId, updateClient, addClient, updateLender, addLender, deleteLender, bump]);
+    updateLender, addLender, deleteLender,
+    feasId, setFeasId, updateFeasibility, addFeasibility, bump,
+  }), [data, role, view, propertyId, updateProperty, duplicateProperty, deleteProperty, addProperty, clientId, updateClient, addClient, updateLender, addLender, deleteLender, feasId, updateFeasibility, addFeasibility, bump]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

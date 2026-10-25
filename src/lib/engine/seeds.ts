@@ -4,6 +4,7 @@
    for engine verification. In production these are replaced by Supabase rows.
    =========================================================================== */
 import { todayISO } from "./tax-data";
+import { blankFeasibility } from "./engine";
 import type { EngineContext } from "./engine";
 
 let _n = 0;
@@ -154,5 +155,6 @@ export function seedContext(): EngineContext {
     clients: [seedClient()],
     properties: [seedProperty()],
     lenders: seedLenders(),
+    feasibilities: [blankFeasibility()],
   };
 }
