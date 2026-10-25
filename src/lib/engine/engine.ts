@@ -892,3 +892,57 @@ export function feasibility(f: Feasibility) {
     unitsCount: (f.units || []).reduce((a: number, u: any) => a + num(u.count), 0),
   };
 }
+
+/* ===========================================================================
+   RISK & VERDICT
+   =========================================================================== */
+function m$(v: number, p: Property, ctx: EngineContext): string {
+  const C = COUNTRIES[(p && p.loc ? p.loc.country : null) || ctx.settings.country || "AU"];
+  if (!isFinite(v)) return "—";
+  const n = Math.abs(v).toLocaleString(C.loc, { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  return v < 0 ? "(" + C.sym + n + ")" : C.sym + n;
+}
+
+export function verdictOf(p: Property, P: ReturnType<typeof project>, ctx: EngineContext, SV?: any) {
+  const f: [string, string][] = [], m = P.metrics;
+  const client = clientOf(p.clientId, ctx) || ctx.clients[0];
+  const cap = num(client?.goals?.cashCapacityWeekly, 250);
+
+  if (P.acq.lvr > .90) f.push(["High", "Leverage above 90% LVR — thin equity buffer if values fall"]);
+  else if (P.acq.lvr > .80) f.push(["Med", `LMI payable — ${m$(P.acq.lmi, p, ctx)} (${(P.acq.lmiRate * 100).toFixed(1)}% of loan)`]);
+  if (!P.isComm && P.demand.idx < 40) f.push(["High", `Rental demand index ${P.demand.idx} — ${P.demand.band.toLowerCase()} market`]);
+  if (P.isComm && num(p.comm.leaseYearsRemaining) <= 2)
+    f.push(["High", `Lease expires in ${p.comm.leaseYearsRemaining} years — a re-let void of ${p.comm.reLetVoidMonths} months costs ${m$(num(p.comm.annualRent) * num(p.comm.reLetVoidMonths) / 12, p, ctx)}`]);
+  if (P.isComm && num(p.comm.capRateShift) > 0) f.push(["Med", "Cap rate softening assumed — value falls even if rent rises"]);
+  if (num(p.maintPct) < .5 && num(p.phys.buildYear) < 1990) f.push(["Med", "Maintenance allowance under 0.5% on a pre-1990 dwelling looks light"]);
+  if (P.ladder.auto._landRatio < .30 && p.phys.type === "House") f.push(["Med", "Land is under 30% of price — weak growth engine for a house"]);
+  if ((p.title.easements || []).length && P.ladder.auto.zoning < 0)
+    f.push(["Med", "Easements or covenants materially restrict development upside"]);
+  if (P.g0 > num(p.market.suburbCagr) + 2.5) f.push(["Med", "Modelled growth sits well above the suburb's own history"]);
+  const ac = assetCagr(p);
+  if (ac && ac.cagr < num(p.market.suburbCagr) - 1.5)
+    f.push(["Med", `This asset has grown at ${ac.cagr}% over ${ac.years} yrs — below the suburb's ${p.market.suburbCagr}%`]);
+  if (-m.weekly1 > cap) f.push(["High", `Year-1 holding cost ${m$(-m.weekly1, p, ctx)}/wk exceeds capacity of ${m$(cap, p, ctx)}/wk`]);
+  if (P.trough < -3000) f.push(["Med", `Lumpy outgoings drive a ${m$(P.trough, p, ctx)} cash trough inside year 1`]);
+  if (P.rolloverShock) f.push(["Med", `Repayment shock in year ${P.rolloverShock.year} — monthly ${m$(P.rolloverShock.from, p, ctx)} → ${m$(P.rolloverShock.to, p, ctx)} (+${P.rolloverShock.pct}%)`]);
+  if (P.tax.trapped && P.rows[0].taxable < 0) f.push(["High", "This structure traps rental losses — no negative gearing benefit against personal income"]);
+  if (P.tax.entity.type === "SMSF") f.push(["Med", "SMSF property advice is financial product advice — AFSL or authorisation required"]);
+  if (num(p.loan.purposeSplit, 100) < 100) f.push(["Med", `Only ${p.loan.purposeSplit}% of interest is deductible — purpose test applied`]);
+  if (SV && SV.capacity < P.acq.loan) f.push(["High", `${SV.lender.name}: capacity ${m$(SV.capacity, p, ctx)} is below the ${m$(P.acq.loan, p, ctx)} loan required`]);
+  if (SV && SV.dti > num(SV.lender.maxDTI)) f.push(["Med", `DTI ${SV.dti.toFixed(1)}× exceeds ${SV.lender.name}'s ${SV.lender.maxDTI}× limit`]);
+
+  const agg = portfolioLandTax(1, ctx);
+  const solo = standaloneLandTax(p, 1);
+  const aggregated = agg.byProp[p.id] || 0;
+  if (aggregated > solo + 200)
+    f.push(["High", `Portfolio aggregation adds ${m$(aggregated - solo, p, ctx)} of land tax a year that a single-property calculator would miss`]);
+
+  const irr = m.irr === null ? -10 : m.irr;
+  const a = clamp(irr / Math.max(1, num(p.hurdle)) * 35, 0, 35);
+  const b = clamp(25 - f.reduce((x, r) => x + (r[0] === "High" ? 8 : 4), 0), 0, 25);
+  const c = clamp((P.ladder.adjCap + CAP) / (2 * CAP) * 20, 0, 20);
+  const d = cap > 0 ? clamp(20 * (1 - Math.max(0, -m.weekly1) / cap), 0, 20) : 10;
+  const score = Math.round(a + b + c + d);
+  const band = score >= 75 ? "Strong" : score >= 58 ? "Viable" : score >= 42 ? "Marginal" : "Not viable on these inputs";
+  return { flags: f, score, band, parts: { a, b, c, d } };
+}
