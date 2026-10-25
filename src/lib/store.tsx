@@ -33,8 +33,14 @@ interface StoreValue {
   setPropertyId: (id: string | null) => void;
   /** Mutate a property by id with a producer, triggering a re-render. */
   updateProperty: (id: string, mut: (p: any) => void) => void;
+  duplicateProperty: (id: string) => void;
+  deleteProperty: (id: string) => void;
+  addProperty: () => void;
   bump: number;
 }
+
+let _uid = 0;
+const uid = (p = "id") => `${p}_${Date.now().toString(36)}${(_uid++).toString(36)}`;
 
 const Ctx = createContext<StoreValue | null>(null);
 
@@ -50,9 +56,41 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     if (p) { mut(p); setBump((b) => b + 1); }
   }, [data]);
 
+  const duplicateProperty = useCallback((id: string) => {
+    const p = data.properties.find((x) => x.id === id);
+    if (!p) return;
+    const copy = JSON.parse(JSON.stringify(p));
+    copy.id = uid("prop");
+    copy.label = (p.label || "Property") + " (copy)";
+    copy.status = "Appraised";
+    data.properties.push(copy);
+    setPropertyId(copy.id);
+    setBump((b) => b + 1);
+  }, [data]);
+
+  const deleteProperty = useCallback((id: string) => {
+    const i = data.properties.findIndex((x) => x.id === id);
+    if (i < 0 || data.properties.length <= 1) return;
+    data.properties.splice(i, 1);
+    setPropertyId(data.properties[0]?.id ?? null);
+    setBump((b) => b + 1);
+  }, [data]);
+
+  const addProperty = useCallback(() => {
+    const base = data.properties[0];
+    const fresh = JSON.parse(JSON.stringify(base));
+    fresh.id = uid("prop");
+    fresh.label = "New property";
+    fresh.status = "Pipeline";
+    data.properties.push(fresh);
+    setPropertyId(fresh.id);
+    setBump((b) => b + 1);
+  }, [data]);
+
   const value = useMemo<StoreValue>(() => ({
-    ctx: data, role, setRole, view, setView, propertyId, setPropertyId, updateProperty, bump,
-  }), [data, role, view, propertyId, updateProperty, bump]);
+    ctx: data, role, setRole, view, setView, propertyId, setPropertyId,
+    updateProperty, duplicateProperty, deleteProperty, addProperty, bump,
+  }), [data, role, view, propertyId, updateProperty, duplicateProperty, deleteProperty, addProperty, bump]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

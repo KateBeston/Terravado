@@ -3,6 +3,7 @@
 import { StoreProvider, useStore } from "@/lib/store";
 import Masthead from "@/components/Masthead";
 import Portfolio from "@/components/Portfolio";
+import PropertyWorkspace from "@/components/PropertyWorkspace";
 
 function comingSoon(label: string) {
   return (
@@ -19,13 +20,15 @@ function Shell() {
     <>
       <Masthead />
       <div className="wrap">
-        {view === "portfolio" ? <Portfolio /> : comingSoon(
-          ({
-            property: "The property workspace", clients: "Clients", serviceability: "Serviceability",
-            equity: "The equity chain", lenders: "Lenders", feasibility: "Feasibility",
-            contacts: "Contacts", audit: "Audit & data",
-          } as Record<string, string>)[view] || "This module",
-        )}
+        {view === "portfolio" ? <Portfolio />
+          : view === "property" ? <PropertyWorkspace />
+          : comingSoon(
+            ({
+              clients: "Clients", serviceability: "Serviceability",
+              equity: "The equity chain", lenders: "Lenders", feasibility: "Feasibility",
+              contacts: "Contacts", audit: "Audit & data",
+            } as Record<string, string>)[view] || "This module",
+          )}
         <div className="disclaimer">
           Terravado models Australian property investments. Tax outputs are indicative and must be verified against
           the relevant revenue office before being represented to a client. Authentication and role gating shown here
