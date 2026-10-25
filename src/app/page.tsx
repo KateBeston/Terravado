@@ -4,6 +4,8 @@ import { StoreProvider, useStore } from "@/lib/store";
 import Masthead from "@/components/Masthead";
 import Portfolio from "@/components/Portfolio";
 import PropertyWorkspace from "@/components/PropertyWorkspace";
+import Clients from "@/components/Clients";
+import Serviceability from "@/components/Serviceability";
 
 function comingSoon(label: string) {
   return (
@@ -22,9 +24,10 @@ function Shell() {
       <div className="wrap">
         {view === "portfolio" ? <Portfolio />
           : view === "property" ? <PropertyWorkspace />
+          : view === "clients" ? <Clients />
+          : view === "serviceability" ? <Serviceability />
           : comingSoon(
             ({
-              clients: "Clients", serviceability: "Serviceability",
               equity: "The equity chain", lenders: "Lenders", feasibility: "Feasibility",
               contacts: "Contacts", audit: "Audit & data",
             } as Record<string, string>)[view] || "This module",

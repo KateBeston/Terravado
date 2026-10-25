@@ -36,6 +36,10 @@ interface StoreValue {
   duplicateProperty: (id: string) => void;
   deleteProperty: (id: string) => void;
   addProperty: () => void;
+  clientId: string | null;
+  setClientId: (id: string | null) => void;
+  updateClient: (id: string, mut: (c: any) => void) => void;
+  addClient: () => void;
   bump: number;
 }
 
@@ -49,6 +53,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [role, setRole] = useState<Role>("admin");
   const [view, setView] = useState<View>("portfolio");
   const [propertyId, setPropertyId] = useState<string | null>(() => data.properties[0]?.id ?? null);
+  const [clientId, setClientId] = useState<string | null>(() => data.clients[0]?.id ?? null);
   const [bump, setBump] = useState(0);
 
   const updateProperty = useCallback((id: string, mut: (p: any) => void) => {
@@ -87,10 +92,26 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     setBump((b) => b + 1);
   }, [data]);
 
+  const updateClient = useCallback((id: string, mut: (c: any) => void) => {
+    const c = data.clients.find((x) => x.id === id);
+    if (c) { mut(c); setBump((b) => b + 1); }
+  }, [data]);
+
+  const addClient = useCallback(() => {
+    const base = data.clients[0];
+    const fresh = JSON.parse(JSON.stringify(base));
+    fresh.id = uid("cli");
+    fresh.name = "New client";
+    data.clients.push(fresh);
+    setClientId(fresh.id);
+    setBump((b) => b + 1);
+  }, [data]);
+
   const value = useMemo<StoreValue>(() => ({
     ctx: data, role, setRole, view, setView, propertyId, setPropertyId,
-    updateProperty, duplicateProperty, deleteProperty, addProperty, bump,
-  }), [data, role, view, propertyId, updateProperty, duplicateProperty, deleteProperty, addProperty, bump]);
+    updateProperty, duplicateProperty, deleteProperty, addProperty,
+    clientId, setClientId, updateClient, addClient, bump,
+  }), [data, role, view, propertyId, updateProperty, duplicateProperty, deleteProperty, addProperty, clientId, updateClient, addClient, bump]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
