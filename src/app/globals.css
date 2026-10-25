@@ -1,0 +1,27 @@
+:root {
+  --bg: #0e1512;
+  --surface: #161d19;
+  --surface-2: #1c241f;
+  --line: #27302a;
+  --fg: #e9efe9;
+  --muted: #93a098;
+  --accent: #5bbd95;
+  --accent-ink: #bfe6d6;
+  --good: #5bbd95;
+  --warn: #e0b453;
+  --bad: #e07a6a;
+  --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace;
+  --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--sans);
+  -webkit-font-smoothing: antialiased;
+  line-height: 1.5;
+}
+a { color: var(--accent); }
+.tnum { font-variant-numeric: tabular-nums; }
