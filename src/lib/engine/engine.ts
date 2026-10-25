@@ -26,6 +26,7 @@ export interface EngineContext {
   entities: Entity[];
   lenders: Lender[];
   feasibilities: Feasibility[];
+  contacts: any[];
   settings: { country?: string; orgName?: string; advisorName?: string };
 }
 

@@ -9,6 +9,7 @@
 import React, { createContext, useContext, useMemo, useState, useCallback } from "react";
 import type { EngineContext } from "./engine/engine";
 import { seedContext } from "./engine/seeds";
+import { ENGINE_VERSION } from "./engine/tax-data";
 
 export type Role = "admin" | "advisor" | "broker" | "client" | "public";
 export const ROLES: Record<Role, { label: string; rank: number }> = {
@@ -47,6 +48,17 @@ interface StoreValue {
   setFeasId: (id: string | null) => void;
   updateFeasibility: (id: string, mut: (f: any) => void) => void;
   addFeasibility: () => void;
+  updateContact: (i: number, field: string, val: any) => void;
+  addContact: () => void;
+  deleteContact: (i: number) => void;
+  updateEntity: (i: number, field: string, val: any) => void;
+  addEntity: () => void;
+  deleteEntity: (i: number) => void;
+  audit: any[];
+  logEvent: (action: string) => void;
+  exportJson: () => string;
+  importJson: (text: string) => boolean;
+  resetData: () => void;
   bump: number;
 }
 
@@ -56,7 +68,8 @@ const uid = (p = "id") => `${p}_${Date.now().toString(36)}${(_uid++).toString(36
 const Ctx = createContext<StoreValue | null>(null);
 
 export function StoreProvider({ children }: { children: React.ReactNode }) {
-  const [data] = useState<EngineContext>(() => seedContext());
+  const [data, setData] = useState<EngineContext>(() => seedContext());
+  const [audit, setAudit] = useState<any[]>(() => [{ ts: new Date().toISOString(), role: "admin", action: "Session started", engine: ENGINE_VERSION }]);
   const [role, setRole] = useState<Role>("admin");
   const [view, setView] = useState<View>("portfolio");
   const [propertyId, setPropertyId] = useState<string | null>(() => data.properties[0]?.id ?? null);
@@ -150,13 +163,65 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     setBump((b) => b + 1);
   }, [data]);
 
+  const logEvent = useCallback((action: string) => {
+    setAudit((a) => [...a, { ts: new Date().toISOString(), role, action, engine: ENGINE_VERSION }]);
+  }, [role]);
+
+  const updateContact = useCallback((i: number, field: string, val: any) => {
+    if (data.contacts[i]) { data.contacts[i][field] = val; setBump((b) => b + 1); }
+  }, [data]);
+  const addContact = useCallback(() => {
+    data.contacts.push({ id: uid("con"), name: "", role: "Conveyancer", firm: "", phone: "", email: "", licence: "", notes: "", propertyIds: [] });
+    setBump((b) => b + 1);
+  }, [data]);
+  const deleteContact = useCallback((i: number) => { data.contacts.splice(i, 1); setBump((b) => b + 1); }, [data]);
+
+  const updateEntity = useCallback((i: number, field: string, val: any) => {
+    if (data.entities[i]) { data.entities[i][field] = val; setBump((b) => b + 1); }
+  }, [data]);
+  const addEntity = useCallback(() => {
+    data.entities.push({ id: uid("ent"), name: "New entity", type: "Individual", region: "NSW", owners: [], taxableIncome: 0, foreign: false, deedExcludesForeign: true });
+    setBump((b) => b + 1);
+  }, [data]);
+  const deleteEntity = useCallback((i: number) => {
+    if (data.entities.length <= 1) return;
+    data.entities.splice(i, 1); setBump((b) => b + 1);
+  }, [data]);
+
+  const exportJson = useCallback(() => JSON.stringify({ ...data, audit }, null, 2), [data, audit]);
+  const importJson = useCallback((text: string) => {
+    try {
+      const parsed = JSON.parse(text);
+      if (!parsed || !Array.isArray(parsed.properties)) return false;
+      setData(parsed);
+      setPropertyId(parsed.properties[0]?.id ?? null);
+      setClientId(parsed.clients?.[0]?.id ?? null);
+      setFeasId(parsed.feasibilities?.[0]?.id ?? null);
+      logEvent("Imported data");
+      setBump((b) => b + 1);
+      return true;
+    } catch { return false; }
+  }, [logEvent]);
+  const resetData = useCallback(() => {
+    const seed = seedContext();
+    setData(seed);
+    setPropertyId(seed.properties[0]?.id ?? null);
+    setClientId(seed.clients[0]?.id ?? null);
+    setFeasId(seed.feasibilities[0]?.id ?? null);
+    logEvent("Reset to seed data");
+    setBump((b) => b + 1);
+  }, [logEvent]);
+
   const value = useMemo<StoreValue>(() => ({
     ctx: data, role, setRole, view, setView, propertyId, setPropertyId,
     updateProperty, duplicateProperty, deleteProperty, addProperty,
     clientId, setClientId, updateClient, addClient,
     updateLender, addLender, deleteLender,
-    feasId, setFeasId, updateFeasibility, addFeasibility, bump,
-  }), [data, role, view, propertyId, updateProperty, duplicateProperty, deleteProperty, addProperty, clientId, updateClient, addClient, updateLender, addLender, deleteLender, feasId, updateFeasibility, addFeasibility, bump]);
+    feasId, setFeasId, updateFeasibility, addFeasibility,
+    updateContact, addContact, deleteContact,
+    updateEntity, addEntity, deleteEntity,
+    audit, logEvent, exportJson, importJson, resetData, bump,
+  }), [data, role, view, propertyId, updateProperty, duplicateProperty, deleteProperty, addProperty, clientId, updateClient, addClient, updateLender, addLender, deleteLender, feasId, updateFeasibility, addFeasibility, updateContact, addContact, deleteContact, updateEntity, addEntity, deleteEntity, audit, logEvent, exportJson, importJson, resetData, bump]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

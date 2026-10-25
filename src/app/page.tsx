@@ -9,6 +9,8 @@ import Serviceability from "@/components/Serviceability";
 import EquityChain from "@/components/EquityChain";
 import Lenders from "@/components/Lenders";
 import Feasibility from "@/components/Feasibility";
+import Contacts from "@/components/Contacts";
+import Audit from "@/components/Audit";
 
 function comingSoon(label: string) {
   return (
@@ -32,9 +34,9 @@ function Shell() {
           : view === "equity" ? <EquityChain />
           : view === "lenders" ? <Lenders />
           : view === "feasibility" ? <Feasibility />
-          : comingSoon(
-            ({ contacts: "Contacts", audit: "Audit & data" } as Record<string, string>)[view] || "This module",
-          )}
+          : view === "contacts" ? <Contacts />
+          : view === "audit" ? <Audit />
+          : comingSoon("This module")}
         <div className="disclaimer">
           Terravado models Australian property investments. Tax outputs are indicative and must be verified against
           the relevant revenue office before being represented to a client. Authentication and role gating shown here

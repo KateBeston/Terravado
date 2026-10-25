@@ -156,5 +156,6 @@ export function seedContext(): EngineContext {
     properties: [seedProperty()],
     lenders: seedLenders(),
     feasibilities: [blankFeasibility()],
+    contacts: [{ id: uid("con"), name: "", role: "Conveyancer", firm: "", phone: "", email: "", licence: "", notes: "", propertyIds: [] }],
   };
 }

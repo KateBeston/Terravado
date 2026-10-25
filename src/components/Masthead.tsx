@@ -11,7 +11,7 @@ const NAV: [View, string][] = [
 
 // Modules delivered so far in the clean rebuild; others are navigable but show
 // a short "next increment" note so nothing looks broken.
-const READY = new Set<View>(["portfolio", "property", "clients", "serviceability", "equity", "lenders", "feasibility"]);
+const READY = new Set<View>(["portfolio", "property", "clients", "serviceability", "equity", "lenders", "feasibility", "contacts", "audit"]);
 
 export default function Masthead() {
   const { ctx, role, setRole, view, setView } = useStore();
