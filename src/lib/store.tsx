@@ -40,6 +40,9 @@ interface StoreValue {
   setClientId: (id: string | null) => void;
   updateClient: (id: string, mut: (c: any) => void) => void;
   addClient: () => void;
+  updateLender: (id: string, mut: (l: any) => void) => void;
+  addLender: () => void;
+  deleteLender: (id: string) => void;
   bump: number;
 }
 
@@ -107,11 +110,33 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     setBump((b) => b + 1);
   }, [data]);
 
+  const updateLender = useCallback((id: string, mut: (l: any) => void) => {
+    const l = data.lenders.find((x) => x.id === id);
+    if (l) { mut(l); setBump((b) => b + 1); }
+  }, [data]);
+
+  const addLender = useCallback(() => {
+    const base = data.lenders[0];
+    const fresh = JSON.parse(JSON.stringify(base));
+    fresh.id = uid("len");
+    fresh.name = "New lender template";
+    data.lenders.push(fresh);
+    setBump((b) => b + 1);
+  }, [data]);
+
+  const deleteLender = useCallback((id: string) => {
+    const i = data.lenders.findIndex((x) => x.id === id);
+    if (i < 0 || data.lenders.length <= 1) return;
+    data.lenders.splice(i, 1);
+    setBump((b) => b + 1);
+  }, [data]);
+
   const value = useMemo<StoreValue>(() => ({
     ctx: data, role, setRole, view, setView, propertyId, setPropertyId,
     updateProperty, duplicateProperty, deleteProperty, addProperty,
-    clientId, setClientId, updateClient, addClient, bump,
-  }), [data, role, view, propertyId, updateProperty, duplicateProperty, deleteProperty, addProperty, clientId, updateClient, addClient, bump]);
+    clientId, setClientId, updateClient, addClient,
+    updateLender, addLender, deleteLender, bump,
+  }), [data, role, view, propertyId, updateProperty, duplicateProperty, deleteProperty, addProperty, clientId, updateClient, addClient, updateLender, addLender, deleteLender, bump]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

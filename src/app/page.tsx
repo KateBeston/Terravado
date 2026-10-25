@@ -6,6 +6,8 @@ import Portfolio from "@/components/Portfolio";
 import PropertyWorkspace from "@/components/PropertyWorkspace";
 import Clients from "@/components/Clients";
 import Serviceability from "@/components/Serviceability";
+import EquityChain from "@/components/EquityChain";
+import Lenders from "@/components/Lenders";
 
 function comingSoon(label: string) {
   return (
@@ -26,10 +28,11 @@ function Shell() {
           : view === "property" ? <PropertyWorkspace />
           : view === "clients" ? <Clients />
           : view === "serviceability" ? <Serviceability />
+          : view === "equity" ? <EquityChain />
+          : view === "lenders" ? <Lenders />
           : comingSoon(
             ({
-              equity: "The equity chain", lenders: "Lenders", feasibility: "Feasibility",
-              contacts: "Contacts", audit: "Audit & data",
+              feasibility: "Feasibility", contacts: "Contacts", audit: "Audit & data",
             } as Record<string, string>)[view] || "This module",
           )}
         <div className="disclaimer">
