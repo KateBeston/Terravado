@@ -8,7 +8,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "verify:engine": "tsx scripts/verify-engine.ts"
+    "typecheck": "tsc --noEmit",
+    "verify:engine": "tsx scripts/verify-engine.ts",
+    "verify": "tsx scripts/verify-engine.ts",
+    "assure": "npm run typecheck && npm run verify:engine"
   },
   "dependencies": {
     "@supabase/ssr": "0.5.2",
