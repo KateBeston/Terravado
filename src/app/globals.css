@@ -4,9 +4,38 @@
    =========================================================================== */
 * { box-sizing: border-box; }
 :root {
-  --black: #0B0B0A; --ink: #1C1B18; --muted: #77736A; --faint: #A9A49A;
-  --line: #E4E0D6; --rule: #CFC9BA; --paper: #FFF; --off: #FAF9F5;
-  --gold: #B08D2E; --gold-d: #8A6B1B; --gold-l: #E3CE8C; --gold-t: #FAF5E6;
+  /* Terravado palette — shared with the internal portal */
+  --primary: #2D3A21;
+  --primary-hover: #1E2716;
+  --primary-tint: #ECEFE4;
+  --success: #35573F;
+  --success-bg: #E6EDE4;
+  --warning: #463B32;
+  --warning-bg: #EEEAE4;
+  --warning-border: #CEC6BC;
+  --info: #1E4A8C;
+  --info-bg: #E4ECFA;
+  --bg: #FAF9F6;
+  --surface: #FFFFFF;
+  --border: #E3E2DD;
+  --input-border: #D6D5CF;
+  --text: #1B1E22;
+  --text-muted: #5B6068;
+
+  /* Editorial token names kept (so no component changes); the gold accent
+     family now resolves to the olive primary, neutrals to the palette. */
+  --black: var(--text);
+  --ink: var(--text);
+  --muted: var(--text-muted);
+  --faint: #9A9EA6;
+  --line: var(--border);
+  --rule: var(--input-border);
+  --paper: var(--surface);
+  --off: var(--bg);
+  --gold: var(--primary);
+  --gold-d: var(--primary-hover);
+  --gold-l: var(--primary-tint);
+  --gold-t: var(--primary-tint);
   --fd: 'Iowan Old Style', 'Palatino Linotype', 'Book Antiqua', Palatino, Georgia, serif;
   --fb: 'Avenir Next', 'Segoe UI', system-ui, -apple-system, sans-serif;
   --fm: ui-monospace, 'SF Mono', 'Cascadia Mono', 'Roboto Mono', Menlo, monospace;
