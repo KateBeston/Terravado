@@ -1,42 +1,40 @@
-Scaffold apps/main-site — the public login workspace (step 2 of the two-app split)
+Main site: keep only user-facing sections; internal-only stays portal-only
 
-Context
-Step 1 extracted the shared @terravado/engine + @terravado/domain packages.
-This adds the second app: the MAIN SITE — the public-facing login workspace where
-advisers, brokers, consultants and their clients work. It pulls the shared engine
-+ domain packages and reads/writes the same (shared) Supabase. The internal portal
-stays as-is for now; dividing which pages live where (and thinning the portal to
-ops/admin) is the next step.
+Clarifies the two-app split. The INTERNAL PORTAL stays fully intact (unchanged) —
+it remains the complete operational view of Terravado. The MAIN SITE carries only
+what a user (adviser / broker / consultant / client) would want; Terravado-internal
+sections were removed from it.
 
-What's new
-- apps/main-site — a second Next app in the monorepo, mirrored from the internal
-  portal, importing @terravado/engine and @terravado/domain (transpilePackages).
-  Its own package.json (terravado-main-site) and vercel.json (syd1, NO regwatch
-  cron — that ingestion is internal-portal's job). No supabase/ migrations of its
-  own: it shares the internal portal's database.
-- Root scripts now cover both apps (dev:portal / dev:main, build:portal /
-  build:main; typecheck + verify span the workspace).
+Removed from apps/main-site (portal keeps all of these)
+- Admin console (platform-admin / tenant management)
+- Data Sources (managing + logging the data feeds)
+- The Business (Terravado's own business documents)
+- Integrations (redirect into Data Sources)
+- /api/regwatch cron route (the fortnightly ingestion job) + its vercel.json cron
+- Nav: dropped the Data Sources, The Business and Admin links; sidebar no longer
+  labelled "Internal Portal"
 
-Deploy
-- Second Vercel project, Root Directory apps/main-site, same NEXT_PUBLIC_SUPABASE_*
-  env as the portal (shared DB). The portal project stays on apps/internal-portal.
+Kept on apps/main-site (user-facing)
+- Dashboard, Modeller/Workspace, Lenders, Portfolio, Equity chain, Contacts,
+  Entities, Properties, Atlas, Stock, Match, Shortlist, Feasibility, Pipeline,
+  Finance, Lodgements, Regulatory Watch, Shared-with-me, Account, Deal export,
+  invite acceptance, and the clients/companies/map redirects.
 
-Known debt (next cleanup, flagged)
-- The app-level backend (lib/data, lib/auth, lib/supabase, lib/domain/service+seed,
-  lib/integrations, lib/modelling, lib/shortlist, lib/matching, lib/sharing,
-  lib/regwatch, lib/deal, lib/format) and the components are currently DUPLICATED
-  across both apps. The engine + domain (the crown-jewel logic and the DB schema)
-  are already shared, so the two apps can't drift on the modelling or the data
-  model — but the app-level backend can. Recommended follow-up: extract a shared
-  packages/core (+ packages/ui) so both apps import one copy. Deferred so the
-  main site stands up fast; worth doing before the two apps diverge much.
+Regulatory Watch — split
+- The alerts VIEW stays on the main site (advisers benefit from seeing tax /
+  lending / property-law changes — read + mark-read only).
+- The INGESTION stays internal: removed the "Check now" trigger and the internal
+  config note from the main-site page; the fortnightly cron lives only in the portal.
 
 Verified
-- @terravado/engine verify: 40/40 assurance checks pass (unchanged).
-- apps/main-site: tsc --noEmit clean; next build green; booted and hit
-  /, /login, /properties/[id]/modelling, /shortlist, /atlas — all 200, with the
-  shared engine computing at runtime (foreign-investor overlay renders $105,600).
-- apps/internal-portal unchanged from step 1 (still builds green, 40/40).
+- main-site: tsc clean; next build green; booted — /, /atlas, /regulatory-watch
+  = 200 (no Check-now button), /data-sources, /admin, /business = 404.
+- internal-portal: unchanged, tsc clean, still has admin / data-sources / business.
+- @terravado/engine verify: 40/40.
+
+Still open (flagged earlier): the app-level backend + components are duplicated
+across both apps. Recommended next cleanup: extract packages/core (+ packages/ui)
+so both apps import one copy.
 
 Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_015DMV1vb1QzHwYuwMuVbkoV

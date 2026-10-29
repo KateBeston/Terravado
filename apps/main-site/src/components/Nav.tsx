@@ -21,9 +21,7 @@ const LINKS: [string, string, string?][] = [
   ["/pipeline", "Pipeline", "stock"],
   ["/finance", "Finance", "finance"],
   ["/lodgements", "Lodgements", "lodgement"],
-  ["/data-sources", "Data Sources", "integrations"],
   ["/regulatory-watch", "Regulatory Watch", "integrations"],
-  ["/business", "The Business", "business"],
   ["/shared", "Shared with me"],
   ["/account", "Account"],
 ];
@@ -39,7 +37,6 @@ export default function Nav({ user, recordId, caps, isAdmin, engineVersion, taxV
     <aside className="nav">
       <div className="brand">
         Terravado<em>.</em>
-        <small>Internal Portal</small>
       </div>
       {links.map(([href, label]) => (
         <Link key={href} href={href} className={`link${active(href) ? " on" : ""}`}>
@@ -47,11 +44,6 @@ export default function Nav({ user, recordId, caps, isAdmin, engineVersion, taxV
           {href === "/regulatory-watch" && regUnread ? <span className="badge" style={{ marginLeft: 6, color: "#b03a2e", borderColor: "#b03a2e", fontSize: 10 }}>{regUnread}</span> : null}
         </Link>
       ))}
-      {isAdmin && (
-        <Link href="/admin" className={`link${active("/admin") ? " on" : ""}`} style={{ color: "#e0b050" }}>
-          Admin
-        </Link>
-      )}
       <div className="spacer" />
       {user && (
         <div className="who">

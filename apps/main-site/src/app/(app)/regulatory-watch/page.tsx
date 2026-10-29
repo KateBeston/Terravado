@@ -1,7 +1,7 @@
 import { requireUser, requireCapability } from "@/lib/auth/guard";
 import { listRegulatoryAlerts } from "@/lib/regwatch/store";
 import { regSources, REG_CATEGORIES } from "@/lib/integrations/regwatch";
-import { runRegWatchAction, acknowledgeRegAlertAction, acknowledgeAllRegAction } from "@/app/actions";
+import { acknowledgeRegAlertAction, acknowledgeAllRegAction } from "@/app/actions";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
@@ -28,9 +28,8 @@ export default async function RegulatoryWatchPage({ searchParams }: { searchPara
       </p>
 
       <div className="panel" style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
-        <form action={runRegWatchAction}><button className="btn" type="submit">Check now</button></form>
         {unread > 0 && <form action={acknowledgeAllRegAction}><button className="act ghost" type="submit">Mark all read ({unread})</button></form>}
-        <span className="muted" style={{ fontSize: 12, marginLeft: "auto" }}>Monitoring {sources.length} sources · fortnightly (1st &amp; 15th) via Vercel Cron</span>
+        <span className="muted" style={{ fontSize: 12, marginLeft: "auto" }}>Monitoring {sources.length} sources · updated fortnightly (1st &amp; 15th)</span>
       </div>
 
       <div className="panel" style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
@@ -43,7 +42,7 @@ export default async function RegulatoryWatchPage({ searchParams }: { searchPara
       <div className="panel">
         <h2>Updates{category ? ` — ${CAT_LABEL[category]}` : ""}</h2>
         {alerts.length === 0 ? (
-          <p className="muted">No updates captured yet. Hit <em>Check now</em> to pull the latest from the regulators (runs live on the server; the build sandbox can&apos;t reach these sites, so this fills in once deployed).</p>
+          <p className="muted">No updates captured yet. New items appear here automatically as the regulators publish them.</p>
         ) : (
           <table>
             <thead><tr><th>Date</th><th>Body</th><th>Category</th><th>Update</th><th></th></tr></thead>
@@ -69,8 +68,8 @@ export default async function RegulatoryWatchPage({ searchParams }: { searchPara
           </table>
         )}
         <p className="muted" style={{ fontSize: 11 }}>
-          Sources are configurable (RSS/newsroom feeds per body) via <code>REGWATCH_SOURCES</code>. The fortnightly job needs
-          <code> CRON_SECRET</code> set in Vercel; interpreting any change and updating the engine stays a human-reviewed step.
+          Updates are monitored fortnightly across the regulators. Terravado surfaces the change and links to the source;
+          interpreting any change and updating the modelling stays a human-reviewed step.
         </p>
       </div>
     </section>
