@@ -2,15 +2,17 @@
   "name": "terravado",
   "version": "0.1.0",
   "private": true,
-  "description": "Terravado monorepo — shared engine + domain packages consumed by the internal portal (ops + engine source of truth) and, next, the public main site.",
+  "description": "Terravado monorepo — shared engine + domain packages consumed by the main site (public login workspace) and the internal portal (ops + engine source of truth), over one shared Supabase.",
   "workspaces": [
     "packages/*",
     "apps/*"
   ],
   "scripts": {
-    "dev": "npm --workspace terravado-internal-portal run dev",
-    "build": "npm --workspace terravado-internal-portal run build",
-    "typecheck": "npm --workspace terravado-internal-portal run typecheck",
+    "dev:portal": "npm --workspace terravado-internal-portal run dev",
+    "dev:main": "npm --workspace terravado-main-site run dev",
+    "build:portal": "npm --workspace terravado-internal-portal run build",
+    "build:main": "npm --workspace terravado-main-site run build",
+    "typecheck": "npm --workspace terravado-internal-portal run typecheck && npm --workspace terravado-main-site run typecheck",
     "verify": "npm --workspace @terravado/engine run verify",
     "assure": "npm run typecheck && npm run verify"
   },

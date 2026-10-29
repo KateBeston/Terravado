@@ -1,43 +1,42 @@
-Monorepo: extract shared engine + domain packages (step 1 of the two-app split)
+Scaffold apps/main-site — the public login workspace (step 2 of the two-app split)
 
 Context
-Terravado is two apps sharing one engine and one database (see
-claude/terravado-target-architecture.md): a public MAIN SITE where advisers,
-brokers, consultants and their clients log in and work, and the INTERNAL PORTAL
-(engine source of truth + master DB + internal operations). This is step 1:
-stand up the monorepo and extract the shared engine, with nothing user-visible
-changing yet. The main-site app comes next.
+Step 1 extracted the shared @terravado/engine + @terravado/domain packages.
+This adds the second app: the MAIN SITE — the public-facing login workspace where
+advisers, brokers, consultants and their clients work. It pulls the shared engine
++ domain packages and reads/writes the same (shared) Supabase. The internal portal
+stays as-is for now; dividing which pages live where (and thinning the portal to
+ops/admin) is the next step.
 
-Structure (was a single Next app; now npm workspaces)
-- packages/engine   — @terravado/engine: the calculators (tax-data, cgt, firb,
-  depreciation, landtax, engine, seeds) + the assurance suite + the verify
-  script. The source of truth both apps import.
-- packages/domain   — @terravado/domain: shared model types, finance helpers,
-  and the base Entity record type (data/repository now re-exports Entity from
-  here, so nothing else needed repointing).
-- apps/internal-portal — the existing Next app, unchanged in behaviour. Keeps
-  data/service/seed, supabase, auth, integrations, components and routes.
-
-How the apps consume the packages
-- npm workspaces link them locally. Both packages ship TypeScript source and are
-  listed in the app's transpilePackages, so Next compiles them directly — no
-  build step per package, no version drift, one engine.
-- App imports repointed: @/lib/engine/* and relative ./engine/* -> @terravado/engine/*;
-  @/lib/assurance/* -> @terravado/engine/assurance/*; domain types/finances ->
-  @terravado/domain/*. App behaviour is identical.
+What's new
+- apps/main-site — a second Next app in the monorepo, mirrored from the internal
+  portal, importing @terravado/engine and @terravado/domain (transpilePackages).
+  Its own package.json (terravado-main-site) and vercel.json (syd1, NO regwatch
+  cron — that ingestion is internal-portal's job). No supabase/ migrations of its
+  own: it shares the internal portal's database.
+- Root scripts now cover both apps (dev:portal / dev:main, build:portal /
+  build:main; typecheck + verify span the workspace).
 
 Deploy
-- One repo, two Vercel projects. The internal portal deploys with root directory
-  apps/internal-portal (its vercel.json — syd1, the regwatch cron — travels with it).
-  The main-site project will point at apps/main-site once it exists.
+- Second Vercel project, Root Directory apps/main-site, same NEXT_PUBLIC_SUPABASE_*
+  env as the portal (shared DB). The portal project stays on apps/internal-portal.
+
+Known debt (next cleanup, flagged)
+- The app-level backend (lib/data, lib/auth, lib/supabase, lib/domain/service+seed,
+  lib/integrations, lib/modelling, lib/shortlist, lib/matching, lib/sharing,
+  lib/regwatch, lib/deal, lib/format) and the components are currently DUPLICATED
+  across both apps. The engine + domain (the crown-jewel logic and the DB schema)
+  are already shared, so the two apps can't drift on the modelling or the data
+  model — but the app-level backend can. Recommended follow-up: extract a shared
+  packages/core (+ packages/ui) so both apps import one copy. Deferred so the
+  main site stands up fast; worth doing before the two apps diverge much.
 
 Verified
-- @terravado/engine verify: 40/40 assurance checks pass.
-- apps/internal-portal: tsc --noEmit clean; next build green.
-- Booted and hit /, /properties/[id]/modelling, /properties/[id]/foreign,
-  /shortlist, /portfolio — all 200, and the engine computes at runtime from the
-  shared package (foreign-investor overlay renders $105,600 from live calc),
-  confirming the packages resolve at build AND runtime.
+- @terravado/engine verify: 40/40 assurance checks pass (unchanged).
+- apps/main-site: tsc --noEmit clean; next build green; booted and hit
+  /, /login, /properties/[id]/modelling, /shortlist, /atlas — all 200, with the
+  shared engine computing at runtime (foreign-investor overlay renders $105,600).
+- apps/internal-portal unchanged from step 1 (still builds green, 40/40).
 
 Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_015DMV1vb1QzHwYuwMuVbkoV
