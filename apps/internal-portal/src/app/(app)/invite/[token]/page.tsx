@@ -1,6 +1,6 @@
-import { requireUser } from "@/lib/auth/guard";
-import { getUser } from "@/lib/auth/session";
-import { createClient } from "@/lib/supabase/server";
+import { requireUser } from "@terravado/core/auth/guard";
+import { getUser } from "@terravado/core/auth/session";
+import { createClient } from "@terravado/core/supabase/server";
 import { acceptShareAction } from "@/app/actions";
 import Link from "next/link";
 

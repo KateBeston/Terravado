@@ -1,6 +1,6 @@
-import { requireUser } from "@/lib/auth/guard";
-import { getCurrentTenant } from "@/lib/auth/tenant";
-import { getProperty, listEntities } from "@/lib/domain/service";
+import { requireUser } from "@terravado/core/auth/guard";
+import { getCurrentTenant } from "@terravado/core/auth/tenant";
+import { getProperty, listEntities } from "@terravado/core/domain/service";
 import { disposalCgt, cgtEntityOf, type CgtEntity } from "@terravado/engine/cgt";
 import { COUNTRIES } from "@terravado/engine/tax-data";
 import { notFound } from "next/navigation";

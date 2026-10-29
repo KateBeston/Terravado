@@ -1,7 +1,7 @@
-import { requireUser } from "@/lib/auth/guard";
-import { getCurrentTenant } from "@/lib/auth/tenant";
-import { getClient, getProperty, listLenders } from "@/lib/domain/service";
-import { assembleDealPack } from "@/lib/deal/pack";
+import { requireUser } from "@terravado/core/auth/guard";
+import { getCurrentTenant } from "@terravado/core/auth/tenant";
+import { getClient, getProperty, listLenders } from "@terravado/core/domain/service";
+import { assembleDealPack } from "@terravado/core/deal/pack";
 import { lodgeDealAction } from "@/app/actions";
 import { notFound } from "next/navigation";
 import Link from "next/link";

@@ -1,40 +1,20 @@
-Main site: keep only user-facing sections; internal-only stays portal-only
+CI: correct the Assurance workflow for the monorepo
 
-Clarifies the two-app split. The INTERNAL PORTAL stays fully intact (unchanged) —
-it remains the complete operational view of Terravado. The MAIN SITE carries only
-what a user (adviser / broker / consultant / client) would want; Terravado-internal
-sections were removed from it.
+The "Assurance" workflow was written for the old single-app layout (root
+verify:engine / lint / build) and failed after the monorepo restructure. This
+replaces it with a single root workflow for the workspace.
 
-Removed from apps/main-site (portal keeps all of these)
-- Admin console (platform-admin / tenant management)
-- Data Sources (managing + logging the data feeds)
-- The Business (Terravado's own business documents)
-- Integrations (redirect into Data Sources)
-- /api/regwatch cron route (the fortnightly ingestion job) + its vercel.json cron
-- Nav: dropped the Data Sources, The Business and Admin links; sidebar no longer
-  labelled "Internal Portal"
+- Added .github/workflows/assurance.yml at the REPO ROOT (GitHub only runs
+  workflows from the root). Installs the workspace once (npm ci), then runs the
+  three gates that catch real regressions: engine assurance checks (npm run
+  verify), typecheck of both apps, and a production build of each app.
+- Removed the stale per-app workflow copies under apps/*/.github (GitHub ignores
+  non-root .github, so they were inert and confusing).
+- Dropped the Lint step: the apps have no ESLint config, so `next lint` prompts
+  interactively and fails in CI. Re-add once an eslint config is in place.
 
-Kept on apps/main-site (user-facing)
-- Dashboard, Modeller/Workspace, Lenders, Portfolio, Equity chain, Contacts,
-  Entities, Properties, Atlas, Stock, Match, Shortlist, Feasibility, Pipeline,
-  Finance, Lodgements, Regulatory Watch, Shared-with-me, Account, Deal export,
-  invite acceptance, and the clients/companies/map redirects.
-
-Regulatory Watch — split
-- The alerts VIEW stays on the main site (advisers benefit from seeing tax /
-  lending / property-law changes — read + mark-read only).
-- The INGESTION stays internal: removed the "Check now" trigger and the internal
-  config note from the main-site page; the fortnightly cron lives only in the portal.
-
-Verified
-- main-site: tsc clean; next build green; booted — /, /atlas, /regulatory-watch
-  = 200 (no Check-now button), /data-sources, /admin, /business = 404.
-- internal-portal: unchanged, tsc clean, still has admin / data-sources / business.
-- @terravado/engine verify: 40/40.
-
-Still open (flagged earlier): the app-level backend + components are duplicated
-across both apps. Recommended next cleanup: extract packages/core (+ packages/ui)
-so both apps import one copy.
+Verified locally: npm run verify = 40/40; npm run typecheck (both apps) clean;
+both apps build green.
 
 Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_015DMV1vb1QzHwYuwMuVbkoV

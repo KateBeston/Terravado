@@ -8,7 +8,7 @@ import {
   valuation, tornado, monteCarlo, portfolioLandTax, standaloneLandTax,
   serviceability, verdictOf, requiredGrowth, assetCagr, clientOf, type EngineContext,
 } from "@terravado/engine/engine";
-import { money as money0, pct, short, num } from "@/lib/format";
+import { money as money0, pct, short, num } from "@terravado/core/format";
 
 const GOLD = "#B08D2E", GOLD_L = "#E3CE8C", BLACK = "#0B0B0A", FAINT = "#A9A49A";
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];

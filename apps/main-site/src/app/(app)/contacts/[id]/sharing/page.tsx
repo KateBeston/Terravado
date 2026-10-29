@@ -1,9 +1,9 @@
-import { requireUser } from "@/lib/auth/guard";
-import { getCurrentTenant } from "@/lib/auth/tenant";
-import { getContact } from "@/lib/domain/service";
-import { listClientShares } from "@/lib/sharing";
+import { requireUser } from "@terravado/core/auth/guard";
+import { getCurrentTenant } from "@terravado/core/auth/tenant";
+import { getContact } from "@terravado/core/domain/service";
+import { listClientShares } from "@terravado/core/sharing";
 import { createShareAction, revokeShareAction, addDealNoteAction } from "@/app/actions";
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@terravado/core/supabase/server";
 import { notFound } from "next/navigation";
 
 export const dynamic = "force-dynamic";

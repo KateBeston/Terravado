@@ -1,6 +1,6 @@
-import { requireUser, requirePlatformAdmin } from "@/lib/auth/guard";
-import { adminListTenants } from "@/lib/auth/admin";
-import { accountTypeLabel } from "@/lib/auth/capabilities";
+import { requireUser, requirePlatformAdmin } from "@terravado/core/auth/guard";
+import { adminListTenants } from "@terravado/core/auth/admin";
+import { accountTypeLabel } from "@terravado/core/auth/capabilities";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";

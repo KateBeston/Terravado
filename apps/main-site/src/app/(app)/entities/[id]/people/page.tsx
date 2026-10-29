@@ -1,6 +1,6 @@
-import { requireUser } from "@/lib/auth/guard";
-import { getCurrentTenant } from "@/lib/auth/tenant";
-import { getEntity, listContacts, listMembers } from "@/lib/domain/service";
+import { requireUser } from "@terravado/core/auth/guard";
+import { getCurrentTenant } from "@terravado/core/auth/tenant";
+import { getEntity, listContacts, listMembers } from "@terravado/core/domain/service";
 import { addMemberAction, deleteMemberAction } from "@/app/actions";
 import { MEMBER_ROLES } from "@terravado/domain/types";
 import { notFound } from "next/navigation";

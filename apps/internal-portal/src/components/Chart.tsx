@@ -4,7 +4,7 @@
    Supports bar / line / area / step series, dual axes, grid, tooltips.
    No charting library, matching the original.
    =========================================================================== */
-import { num } from "@/lib/format";
+import { num } from "@terravado/core/format";
 
 const LINE = "#E4E0D6", BLACK = "#0B0B0A", FAINT = "#A9A49A";
 

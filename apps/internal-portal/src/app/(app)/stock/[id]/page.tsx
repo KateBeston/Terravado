@@ -1,10 +1,10 @@
-import { requireUser, requireCapability } from "@/lib/auth/guard";
-import { getCurrentTenant } from "@/lib/auth/tenant";
-import { getDevelopment, listLots } from "@/lib/domain/service";
+import { requireUser, requireCapability } from "@terravado/core/auth/guard";
+import { getCurrentTenant } from "@terravado/core/auth/tenant";
+import { getDevelopment, listLots } from "@terravado/core/domain/service";
 import { updateDevelopmentAction, deleteDevelopmentAction, createLotAction, deleteLotAction } from "@/app/actions";
 import { LOT_STATUS } from "@terravado/domain/types";
 import StockImport from "@/components/StockImport";
-import { STOCK_EXTRACTION_CONFIGURED } from "@/lib/integrations/extraction";
+import { STOCK_EXTRACTION_CONFIGURED } from "@terravado/core/integrations/extraction";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 

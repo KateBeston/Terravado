@@ -2,9 +2,9 @@
 /* Lenders view — faithful port of viewLenders(). Admin-configured lender
    templates (not any lender's policy). Each panel edits one template. */
 import { useState } from "react";
-import { useStore } from "@/lib/store";
+import { useStore } from "@terravado/core/store";
 import { Field, Panel, type Updater } from "./property/fields";
-import { pct } from "@/lib/format";
+import { pct } from "@terravado/core/format";
 
 export default function Lenders() {
   const { ctx, updateLender, addLender, deleteLender } = useStore();

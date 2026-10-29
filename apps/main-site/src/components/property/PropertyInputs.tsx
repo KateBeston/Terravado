@@ -4,7 +4,7 @@ import { Field, Panel, Cell, addItem, delItem, type Updater } from "./fields";
 import { COUNTRIES, TAX_DATA } from "@terravado/engine/tax-data";
 import { DRIVERS, GROUPS, FREQ, assetCagr, portfolioLandTax, standaloneLandTax } from "@terravado/engine/engine";
 import type { EngineContext } from "@terravado/engine/engine";
-import { money as money0, pct, num } from "@/lib/format";
+import { money as money0, pct, num } from "@terravado/core/format";
 
 const delBtn = (update: Updater, path: string, i: number) =>
   <button className="x" onClick={() => delItem(update, path, i)}>×</button>;

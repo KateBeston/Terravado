@@ -1,8 +1,8 @@
-import { requireUser, requireCapability } from "@/lib/auth/guard";
-import { getCurrentTenant } from "@/lib/auth/tenant";
-import { listLodgements } from "@/lib/domain/service";
+import { requireUser, requireCapability } from "@terravado/core/auth/guard";
+import { getCurrentTenant } from "@terravado/core/auth/tenant";
+import { listLodgements } from "@terravado/core/domain/service";
 import { updateLodgementStatusAction, deleteLodgementAction } from "@/app/actions";
-import { SIMPOLOGY_CONFIGURED, NEXTGEN_CONFIGURED } from "@/lib/integrations/lodgement";
+import { SIMPOLOGY_CONFIGURED, NEXTGEN_CONFIGURED } from "@terravado/core/integrations/lodgement";
 
 export const dynamic = "force-dynamic";
 

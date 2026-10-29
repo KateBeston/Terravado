@@ -1,8 +1,8 @@
-import { requireUser } from "@/lib/auth/guard";
-import { getCurrentTenant } from "@/lib/auth/tenant";
-import { listClients, getClient, listProperties, listLenders, listEntities } from "@/lib/domain/service";
-import { dealInputs } from "@/lib/deal/pack";
-import { runModel, assessPosition } from "@/lib/modelling/run";
+import { requireUser } from "@terravado/core/auth/guard";
+import { getCurrentTenant } from "@terravado/core/auth/tenant";
+import { listClients, getClient, listProperties, listLenders, listEntities } from "@terravado/core/domain/service";
+import { dealInputs } from "@terravado/core/deal/pack";
+import { runModel, assessPosition } from "@terravado/core/modelling/run";
 import { aggregateLandTax, type LandTaxHolding } from "@terravado/engine/landtax";
 import { createPropertyAction, saveLandTaxInputsAction } from "@/app/actions";
 import Link from "next/link";

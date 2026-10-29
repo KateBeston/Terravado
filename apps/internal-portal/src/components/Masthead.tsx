@@ -1,6 +1,6 @@
 "use client";
 import { BRAND } from "@/config/brand";
-import { useStore, ROLES, type Role, type View } from "@/lib/store";
+import { useStore, ROLES, type Role, type View } from "@terravado/core/store";
 import { TAX_DATA, ENGINE_VERSION } from "@terravado/engine/tax-data";
 
 const NAV: [View, string][] = [

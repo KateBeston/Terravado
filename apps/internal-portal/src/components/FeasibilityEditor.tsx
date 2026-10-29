@@ -9,7 +9,7 @@ import "../app/workspace-theme.css";
 import { Field, Panel, Cell, addItem, delItem, type Updater } from "./property/fields";
 import { feasibility, type Feasibility as Feas } from "@terravado/engine/engine";
 import { COUNTRIES } from "@terravado/engine/tax-data";
-import { money as money0, pct, num } from "@/lib/format";
+import { money as money0, pct, num } from "@terravado/core/format";
 import { saveFeasibilityAction, deleteFeasibilityAction } from "@/app/actions";
 
 const deep = <T,>(o: T): T => JSON.parse(JSON.stringify(o));

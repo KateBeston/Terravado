@@ -1,9 +1,9 @@
-import { requireUser, requireCapability } from "@/lib/auth/guard";
-import { getCurrentTenant } from "@/lib/auth/tenant";
-import { integrationStatuses } from "@/lib/integrations/registry";
-import { getAbsIndicators } from "@/lib/integrations/abs";
-import { getBankProducts } from "@/lib/integrations/bank-products";
-import { listDataSourceEvents } from "@/lib/domain/service";
+import { requireUser, requireCapability } from "@terravado/core/auth/guard";
+import { getCurrentTenant } from "@terravado/core/auth/tenant";
+import { integrationStatuses } from "@terravado/core/integrations/registry";
+import { getAbsIndicators } from "@terravado/core/integrations/abs";
+import { getBankProducts } from "@terravado/core/integrations/bank-products";
+import { listDataSourceEvents } from "@terravado/core/domain/service";
 import { checkDataSourcesAction } from "@/app/actions";
 
 export const dynamic = "force-dynamic";

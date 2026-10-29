@@ -1,6 +1,6 @@
-import { requireUser } from "@/lib/auth/guard";
-import { getCurrentTenant } from "@/lib/auth/tenant";
-import { getProperty } from "@/lib/domain/service";
+import { requireUser } from "@terravado/core/auth/guard";
+import { getCurrentTenant } from "@terravado/core/auth/tenant";
+import { getProperty } from "@terravado/core/domain/service";
 import { savePropertyDetailsAction } from "@/app/actions";
 import { notFound } from "next/navigation";
 

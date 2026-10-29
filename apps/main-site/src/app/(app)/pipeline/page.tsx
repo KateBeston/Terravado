@@ -1,6 +1,6 @@
-import { requireUser, requireCapability } from "@/lib/auth/guard";
-import { getCurrentTenant } from "@/lib/auth/tenant";
-import { listDeals, listLots, listClients, listDevelopments } from "@/lib/domain/service";
+import { requireUser, requireCapability } from "@terravado/core/auth/guard";
+import { getCurrentTenant } from "@terravado/core/auth/tenant";
+import { listDeals, listLots, listClients, listDevelopments } from "@terravado/core/domain/service";
 import { createDealAction, updateDealStageAction, deleteDealAction } from "@/app/actions";
 import { DEAL_STAGES, commissionFor } from "@terravado/domain/types";
 import CommissionCalculator from "@/components/CommissionCalculator";

@@ -1,6 +1,6 @@
 "use client";
 /* Contacts view — faithful port of viewContacts(). The professional directory. */
-import { useStore } from "@/lib/store";
+import { useStore } from "@terravado/core/store";
 
 const ROLES = ["Solicitor", "Conveyancer", "Valuer", "Quantity surveyor", "Architect", "Town planner", "Builder", "Buyer's agent", "Property manager", "Accountant", "Mortgage broker", "Trade"];
 

@@ -1,5 +1,5 @@
-import { requireUser } from "@/lib/auth/guard";
-import { createClient } from "@/lib/supabase/server";
+import { requireUser } from "@terravado/core/auth/guard";
+import { createClient } from "@terravado/core/supabase/server";
 import { deriveAssessableFinances } from "@terravado/domain/finances";
 import { addDealNoteAction, addDealDocumentAction, collabSaveFinancesAction } from "@/app/actions";
 import { notFound } from "next/navigation";

@@ -1,7 +1,7 @@
 "use client";
 import { useState, type FormEvent } from "react";
-import { IS_SUPABASE_CONFIGURED } from "@/lib/supabase/config";
-import { createClient } from "@/lib/supabase/client";
+import { IS_SUPABASE_CONFIGURED } from "@terravado/core/supabase/config";
+import { createClient } from "@terravado/core/supabase/client";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");

@@ -1,8 +1,8 @@
-import { requireUser } from "@/lib/auth/guard";
-import { getCurrentTenant } from "@/lib/auth/tenant";
-import { listClients, getClient, listReportSnapshots, listProperties, getProperty, listLenders } from "@/lib/domain/service";
+import { requireUser } from "@terravado/core/auth/guard";
+import { getCurrentTenant } from "@terravado/core/auth/tenant";
+import { listClients, getClient, listReportSnapshots, listProperties, getProperty, listLenders } from "@terravado/core/domain/service";
 import { saveClientFinancesAction, saveRunAction } from "@/app/actions";
-import { runModel, runScenarios, runStressTest, runLenderCompare, type ModelInputs } from "@/lib/modelling/run";
+import { runModel, runScenarios, runStressTest, runLenderCompare, type ModelInputs } from "@terravado/core/modelling/run";
 import { deriveAssessableFinances } from "@terravado/domain/finances";
 import Link from "next/link";
 

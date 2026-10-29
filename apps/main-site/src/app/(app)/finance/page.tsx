@@ -1,8 +1,8 @@
-import { requireUser, requireCapability } from "@/lib/auth/guard";
-import { getCurrentTenant } from "@/lib/auth/tenant";
-import { listLenders } from "@/lib/domain/service";
-import { assessPosition } from "@/lib/modelling/run";
-import { QUICKLI_CONFIGURED } from "@/lib/integrations/finance/quickli";
+import { requireUser, requireCapability } from "@terravado/core/auth/guard";
+import { getCurrentTenant } from "@terravado/core/auth/tenant";
+import { listLenders } from "@terravado/core/domain/service";
+import { assessPosition } from "@terravado/core/modelling/run";
+import { QUICKLI_CONFIGURED } from "@terravado/core/integrations/finance/quickli";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";

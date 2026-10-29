@@ -2,7 +2,7 @@
 /* Property workspace — faithful port of viewProperty(): toolbar + input column
    + KPI strip + output tabs, recalculating live. */
 import { useMemo, useState } from "react";
-import { useStore } from "@/lib/store";
+import { useStore } from "@terravado/core/store";
 import { project, portfolioLandTax } from "@terravado/engine/engine";
 import PropertyInputs from "./property/PropertyInputs";
 import PropertyTabs, { KpiStrip, type PTab } from "./property/PropertyTabs";

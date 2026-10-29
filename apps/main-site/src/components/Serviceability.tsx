@@ -1,7 +1,7 @@
 "use client";
 /* Serviceability view — faithful port of viewServiceability(): client picker +
    the live lender comparison. */
-import { useStore } from "@/lib/store";
+import { useStore } from "@terravado/core/store";
 import LenderCompare from "./LenderCompare";
 
 export default function Serviceability() {

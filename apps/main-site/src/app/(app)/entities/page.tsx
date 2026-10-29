@@ -1,6 +1,6 @@
-import { requireUser } from "@/lib/auth/guard";
-import { getCurrentTenant } from "@/lib/auth/tenant";
-import { listEntities, listClients } from "@/lib/domain/service";
+import { requireUser } from "@terravado/core/auth/guard";
+import { getCurrentTenant } from "@terravado/core/auth/tenant";
+import { listEntities, listClients } from "@terravado/core/domain/service";
 import { createEntityAction, deleteEntityAction } from "@/app/actions";
 import { ENTITY_TYPES } from "@terravado/domain/types";
 import Link from "next/link";

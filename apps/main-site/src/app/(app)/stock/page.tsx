@@ -1,6 +1,6 @@
-import { requireUser, requireCapability } from "@/lib/auth/guard";
-import { getCurrentTenant } from "@/lib/auth/tenant";
-import { listDevelopments, listLots } from "@/lib/domain/service";
+import { requireUser, requireCapability } from "@terravado/core/auth/guard";
+import { getCurrentTenant } from "@terravado/core/auth/tenant";
+import { listDevelopments, listLots } from "@terravado/core/domain/service";
 import { createDevelopmentAction } from "@/app/actions";
 import Link from "next/link";
 

@@ -1,21 +1,21 @@
 "use server";
 import { revalidatePath } from "next/cache";
-import { requireUser } from "@/lib/auth/guard";
-import { getCurrentTenant } from "@/lib/auth/tenant";
-import { ACCOUNT_TYPES, TEAM_ROLES } from "@/lib/auth/capabilities";
-import { createClient } from "@/lib/supabase/server";
-import { getUser } from "@/lib/auth/session";
+import { requireUser } from "@terravado/core/auth/guard";
+import { getCurrentTenant } from "@terravado/core/auth/tenant";
+import { ACCOUNT_TYPES, TEAM_ROLES } from "@terravado/core/auth/capabilities";
+import { createClient } from "@terravado/core/supabase/server";
+import { getUser } from "@terravado/core/auth/session";
 import { redirect } from "next/navigation";
-import * as svc from "@/lib/domain/service";
+import * as svc from "@terravado/core/domain/service";
 import type { BusinessDocStatus, PropertyStatus } from "@terravado/domain/types";
-import { runModel, runStressTest, type ModelInputs } from "@/lib/modelling/run";
+import { runModel, runStressTest, type ModelInputs } from "@terravado/core/modelling/run";
 import { blankFeasibility } from "@terravado/engine/engine";
-import { getPropertyDataProvider } from "@/lib/integrations/property-data";
-import { assembleDealPack } from "@/lib/deal/pack";
-import { getLodgementProvider } from "@/lib/integrations/lodgement";
-import { smartSearchProperty } from "@/lib/integrations/smart-search";
-import { getAbsIndicators } from "@/lib/integrations/abs";
-import { getBankProducts } from "@/lib/integrations/bank-products";
+import { getPropertyDataProvider } from "@terravado/core/integrations/property-data";
+import { assembleDealPack } from "@terravado/core/deal/pack";
+import { getLodgementProvider } from "@terravado/core/integrations/lodgement";
+import { smartSearchProperty } from "@terravado/core/integrations/smart-search";
+import { getAbsIndicators } from "@terravado/core/integrations/abs";
+import { getBankProducts } from "@terravado/core/integrations/bank-products";
 import type { LodgementStatus } from "@terravado/domain/types";
 
 const s = (fd: FormData, k: string): string | undefined => {
@@ -822,8 +822,8 @@ export async function deleteDevelopmentAction(fd: FormData) {
 // --- Regulatory Watch: refresh the feed and acknowledge alerts ---
 export async function runRegWatchAction() {
   await requireUser();
-  const { collectRegulatoryItems } = await import("@/lib/integrations/regwatch");
-  const { persistRegulatoryItems } = await import("@/lib/regwatch/store");
+  const { collectRegulatoryItems } = await import("@terravado/core/integrations/regwatch");
+  const { persistRegulatoryItems } = await import("@terravado/core/regwatch/store");
   const { items } = await collectRegulatoryItems();
   await persistRegulatoryItems(items);
   revalidatePath("/regulatory-watch");
@@ -911,7 +911,7 @@ export async function deleteLotAction(fd: FormData) {
    (returned to the confirm table — nothing is saved here). */
 export async function extractStockAction(fd: FormData): Promise<{ rows?: any[]; error?: string }> {
   await requireUser();
-  const { getExtractionProvider } = await import("@/lib/integrations/extraction");
+  const { getExtractionProvider } = await import("@terravado/core/integrations/extraction");
   const file = fd.get("file");
   if (!(file instanceof File) || file.size === 0) return { error: "No file uploaded." };
   if (file.size > 8 * 1024 * 1024) return { error: "File too large (max 8MB)." };

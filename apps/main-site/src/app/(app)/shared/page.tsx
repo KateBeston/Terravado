@@ -1,5 +1,5 @@
-import { requireUser } from "@/lib/auth/guard";
-import { listSharedWithMe } from "@/lib/sharing";
+import { requireUser } from "@terravado/core/auth/guard";
+import { listSharedWithMe } from "@terravado/core/sharing";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";

@@ -1,8 +1,8 @@
-import { requireUser } from "@/lib/auth/guard";
-import { getCurrentTenant } from "@/lib/auth/tenant";
-import { listClients, getClient, listProperties, listLenders } from "@/lib/domain/service";
-import { dealInputs } from "@/lib/deal/pack";
-import { runEquityChain, type EquityChainCfg } from "@/lib/modelling/run";
+import { requireUser } from "@terravado/core/auth/guard";
+import { getCurrentTenant } from "@terravado/core/auth/tenant";
+import { listClients, getClient, listProperties, listLenders } from "@terravado/core/domain/service";
+import { dealInputs } from "@terravado/core/deal/pack";
+import { runEquityChain, type EquityChainCfg } from "@terravado/core/modelling/run";
 import { saveLoanBalancesAction } from "@/app/actions";
 import type { Property } from "@terravado/domain/types";
 

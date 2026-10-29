@@ -1,9 +1,9 @@
 "use client";
 /* Lender comparison — faithful port of lenderCompare(). Shared by the Clients
    view (right column) and the Serviceability view. */
-import { useStore } from "@/lib/store";
+import { useStore } from "@terravado/core/store";
 import { acquisition, project, serviceability, totalIncome, type EngineContext } from "@terravado/engine/engine";
-import { money as money0, pct, num } from "@/lib/format";
+import { money as money0, pct, num } from "@terravado/core/format";
 import Chart from "./Chart";
 
 const GOLD = "#B08D2E", BLACK = "#0B0B0A", LINE = "#E4E0D6";

@@ -1,6 +1,6 @@
-import { requireUser } from "@/lib/auth/guard";
-import { getCurrentTenant } from "@/lib/auth/tenant";
-import { listBusinessDocs } from "@/lib/domain/service";
+import { requireUser } from "@terravado/core/auth/guard";
+import { getCurrentTenant } from "@terravado/core/auth/tenant";
+import { listBusinessDocs } from "@terravado/core/domain/service";
 import { createBusinessDocAction, deleteBusinessDocAction } from "@/app/actions";
 import Link from "next/link";
 

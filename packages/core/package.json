@@ -1,0 +1,25 @@
+{
+  "name": "@terravado/core",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Terravado shared app backend — data/repository, auth, supabase clients, domain operations (service/seed), integrations, modelling, shortlist, matching, sharing, regwatch, deal pack, format and the store context. Imported by both apps so there is one copy.",
+  "exports": {
+    ".": "./src/index.ts",
+    "./*": [
+      "./src/*.ts",
+      "./src/*/index.ts",
+      "./src/*.tsx"
+    ]
+  },
+  "dependencies": {
+    "@terravado/domain": "*",
+    "@terravado/engine": "*"
+  },
+  "peerDependencies": {
+    "@supabase/ssr": "0.5.2",
+    "@supabase/supabase-js": "2.45.4",
+    "next": "14.2.15",
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  }
+}

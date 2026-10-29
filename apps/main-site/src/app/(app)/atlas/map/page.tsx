@@ -1,6 +1,6 @@
-import { requireUser } from "@/lib/auth/guard";
-import { getPropertyDataProvider } from "@/lib/integrations/property-data";
-import { getAbsIndicators } from "@/lib/integrations/abs";
+import { requireUser } from "@terravado/core/auth/guard";
+import { getPropertyDataProvider } from "@terravado/core/integrations/property-data";
+import { getAbsIndicators } from "@terravado/core/integrations/abs";
 import MapClient from "./MapClient";
 import type { StateMetrics, OverlayDef } from "@/components/AustraliaMap";
 import geojson from "./au-states.json";

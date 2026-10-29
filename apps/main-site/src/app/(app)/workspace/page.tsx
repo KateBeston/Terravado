@@ -1,4 +1,4 @@
-import { requireUser } from "@/lib/auth/guard";
+import { requireUser } from "@terravado/core/auth/guard";
 import WorkspaceClient from "./WorkspaceClient";
 
 export const dynamic = "force-dynamic";

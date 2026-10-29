@@ -2,10 +2,10 @@
 /* Clients view — faithful port of viewClients(). Identity, income, liabilities,
    living expenses & goals, assets (left) + live lender comparison (right). */
 import { useState } from "react";
-import { useStore } from "@/lib/store";
+import { useStore } from "@terravado/core/store";
 import { Field, Panel, Cell, addItem, delItem, type Updater } from "./property/fields";
 import { totalIncome } from "@terravado/engine/engine";
-import { money as money0, num } from "@/lib/format";
+import { money as money0, num } from "@terravado/core/format";
 import LenderCompare from "./LenderCompare";
 
 export default function Clients() {

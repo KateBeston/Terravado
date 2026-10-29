@@ -1,6 +1,6 @@
-import { requireUser } from "@/lib/auth/guard";
-import { getCurrentTenant } from "@/lib/auth/tenant";
-import { getProperty } from "@/lib/domain/service";
+import { requireUser } from "@terravado/core/auth/guard";
+import { getCurrentTenant } from "@terravado/core/auth/tenant";
+import { getProperty } from "@terravado/core/domain/service";
 import { savePropertyModellingAction, addPropertyListItemAction, removePropertyListItemAction, updatePropertyListItemAction } from "@/app/actions";
 import { modelDepreciation, type DepInput } from "@terravado/engine/depreciation";
 import { TAX_DATA } from "@terravado/engine/tax-data";

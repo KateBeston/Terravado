@@ -7,7 +7,7 @@
    module screens are unchanged. Styling is scoped under `.tv-root`.
    =========================================================================== */
 import "../../workspace-theme.css";
-import { StoreProvider, useStore } from "@/lib/store";
+import { StoreProvider, useStore } from "@terravado/core/store";
 import Masthead from "@/components/Masthead";
 import Portfolio from "@/components/Portfolio";
 import PropertyWorkspace from "@/components/PropertyWorkspace";

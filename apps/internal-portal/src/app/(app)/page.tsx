@@ -1,7 +1,7 @@
-import { requireUser } from "@/lib/auth/guard";
-import { getCurrentTenant } from "@/lib/auth/tenant";
-import { listClients, listContacts, listProperties } from "@/lib/domain/service";
-import { IS_SUPABASE_CONFIGURED } from "@/lib/supabase/config";
+import { requireUser } from "@terravado/core/auth/guard";
+import { getCurrentTenant } from "@terravado/core/auth/tenant";
+import { listClients, listContacts, listProperties } from "@terravado/core/domain/service";
+import { IS_SUPABASE_CONFIGURED } from "@terravado/core/supabase/config";
 import { ENGINE_VERSION, TAX_DATA } from "@terravado/engine/tax-data";
 
 export const dynamic = "force-dynamic";

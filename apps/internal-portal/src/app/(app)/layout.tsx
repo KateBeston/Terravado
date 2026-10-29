@@ -1,11 +1,11 @@
 import Nav from "@/components/Nav";
 import BackBar from "@/components/BackBar";
-import { getUser } from "@/lib/auth/session";
-import { getCurrentTenant, getTenantRoles } from "@/lib/auth/tenant";
-import { effectiveCapabilities } from "@/lib/auth/capabilities";
-import { getIsPlatformAdmin } from "@/lib/auth/admin";
-import { listContacts } from "@/lib/domain/service";
-import { unreadRegulatoryCount } from "@/lib/regwatch/store";
+import { getUser } from "@terravado/core/auth/session";
+import { getCurrentTenant, getTenantRoles } from "@terravado/core/auth/tenant";
+import { effectiveCapabilities } from "@terravado/core/auth/capabilities";
+import { getIsPlatformAdmin } from "@terravado/core/auth/admin";
+import { listContacts } from "@terravado/core/domain/service";
+import { unreadRegulatoryCount } from "@terravado/core/regwatch/store";
 import { ENGINE_VERSION, TAX_DATA } from "@terravado/engine/tax-data";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {

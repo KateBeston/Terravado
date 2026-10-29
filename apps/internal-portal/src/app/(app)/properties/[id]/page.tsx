@@ -1,6 +1,6 @@
-import { requireUser } from "@/lib/auth/guard";
-import { getCurrentTenant } from "@/lib/auth/tenant";
-import { getProperty, listClients, listEntities } from "@/lib/domain/service";
+import { requireUser } from "@terravado/core/auth/guard";
+import { getCurrentTenant } from "@terravado/core/auth/tenant";
+import { getProperty, listClients, listEntities } from "@terravado/core/domain/service";
 import { updatePropertyClientAction, updatePropertyCoreAction } from "@/app/actions";
 import AddressAutocomplete from "@/components/AddressAutocomplete";
 import { notFound } from "next/navigation";

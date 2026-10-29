@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { collectRegulatoryItems } from "@/lib/integrations/regwatch";
+import { collectRegulatoryItems } from "@terravado/core/integrations/regwatch";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;

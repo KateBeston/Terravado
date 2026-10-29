@@ -3,11 +3,11 @@
    development modelling: cost stack, GST margin scheme, capitalised interest,
    residual land value, funding and a sensitivity grid. */
 import { useState } from "react";
-import { useStore } from "@/lib/store";
+import { useStore } from "@terravado/core/store";
 import { Field, Panel, Cell, addItem, delItem, type Updater } from "./property/fields";
 import { feasibility, type Feasibility as Feas } from "@terravado/engine/engine";
 import { COUNTRIES } from "@terravado/engine/tax-data";
-import { money as money0, pct, num } from "@/lib/format";
+import { money as money0, pct, num } from "@terravado/core/format";
 
 const deep = <T,>(o: T): T => JSON.parse(JSON.stringify(o));
 

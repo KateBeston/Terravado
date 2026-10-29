@@ -1,7 +1,7 @@
-import { requireUser } from "@/lib/auth/guard";
-import { getCurrentTenant, getTenantRoles, getTenantMembers } from "@/lib/auth/tenant";
-import { getUser } from "@/lib/auth/session";
-import { ACCOUNT_TYPES, TEAM_ROLES, effectiveCapabilities, accountTypeLabel, normaliseAccountType, type Capability } from "@/lib/auth/capabilities";
+import { requireUser } from "@terravado/core/auth/guard";
+import { getCurrentTenant, getTenantRoles, getTenantMembers } from "@terravado/core/auth/tenant";
+import { getUser } from "@terravado/core/auth/session";
+import { ACCOUNT_TYPES, TEAM_ROLES, effectiveCapabilities, accountTypeLabel, normaliseAccountType, type Capability } from "@terravado/core/auth/capabilities";
 import { updateAccountTypeAction, updateMemberRoleAction } from "@/app/actions";
 
 export const dynamic = "force-dynamic";

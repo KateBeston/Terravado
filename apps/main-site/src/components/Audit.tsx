@@ -2,7 +2,7 @@
 /* Audit & data view — faithful port of viewAudit(). Ownership entities, the
    versioned tax data block, data export/import/reset, and the append-only log. */
 import { useState } from "react";
-import { useStore } from "@/lib/store";
+import { useStore } from "@terravado/core/store";
 import { Panel } from "./property/fields";
 import { TAX_DATA } from "@terravado/engine/tax-data";
 

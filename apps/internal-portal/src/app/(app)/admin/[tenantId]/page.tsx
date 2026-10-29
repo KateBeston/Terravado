@@ -1,7 +1,7 @@
-import { requireUser, requirePlatformAdmin } from "@/lib/auth/guard";
-import { adminListTenants, adminListMembers, adminListUsers } from "@/lib/auth/admin";
+import { requireUser, requirePlatformAdmin } from "@terravado/core/auth/guard";
+import { adminListTenants, adminListMembers, adminListUsers } from "@terravado/core/auth/admin";
 import { adminSetAccountTypeAction, adminSetMemberRoleAction, adminAddMemberAction } from "@/app/actions";
-import { ACCOUNT_TYPES, TEAM_ROLES } from "@/lib/auth/capabilities";
+import { ACCOUNT_TYPES, TEAM_ROLES } from "@terravado/core/auth/capabilities";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 

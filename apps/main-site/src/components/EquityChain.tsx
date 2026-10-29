@@ -2,10 +2,10 @@
 /* Equity chain view — faithful port of viewEquity(). Models equity recycling
    constrained by serviceability, naming the blocker (equity vs capacity). */
 import { useState } from "react";
-import { useStore } from "@/lib/store";
+import { useStore } from "@terravado/core/store";
 import { Field, Panel, type Updater } from "./property/fields";
 import { equityChain } from "@terravado/engine/engine";
-import { money as money0, pct } from "@/lib/format";
+import { money as money0, pct } from "@terravado/core/format";
 import Chart from "./Chart";
 
 const GOLD = "#B08D2E", BLACK = "#0B0B0A", LINE = "#E4E0D6";

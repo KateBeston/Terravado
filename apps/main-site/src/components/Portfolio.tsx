@@ -4,11 +4,11 @@
    portfolioTab (Assets, Land tax aggregation, Projection).
    =========================================================================== */
 import { useMemo, useState } from "react";
-import { useStore } from "@/lib/store";
+import { useStore } from "@terravado/core/store";
 import {
   project, portfolioLandTax, standaloneLandTax, landValueOf, verdictOf, entityOf,
 } from "@terravado/engine/engine";
-import { money as money0, pct, num } from "@/lib/format";
+import { money as money0, pct, num } from "@terravado/core/format";
 import Chart from "./Chart";
 
 const GOLD = "#B08D2E", BLACK = "#0B0B0A", FAINT = "#A9A49A";

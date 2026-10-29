@@ -1,15 +1,16 @@
 name: Assurance
 
-# Layer 4 of the accuracy framework: the checks run automatically on every
-# change, so nothing ships that breaks a calculation, a type, or the build.
-
 on:
   push:
     branches: [main, master]
   pull_request:
 
+# Monorepo CI. Installs the whole workspace once, then runs the three gates that
+# catch real regressions: the engine assurance checks, a typecheck of both apps,
+# and a production build of each app. (Lint is omitted until an ESLint config is
+# added — `next lint` with no config prompts interactively and fails in CI.)
 jobs:
-  verify:
+  assurance:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -17,15 +18,13 @@ jobs:
         with:
           node-version: 20
           cache: npm
-      - run: npm ci
-      - name: Typecheck
-        run: npm run typecheck
+      - name: Install workspace
+        run: npm ci
       - name: Engine assurance checks
-        run: npm run verify:engine
-      - name: Lint
-        run: npm run lint
-      - name: Production build
-        run: npm run build
-        env:
-          NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-anon-key
+        run: npm run verify
+      - name: Typecheck (both apps)
+        run: npm run typecheck
+      - name: Build internal portal
+        run: npm run build:portal
+      - name: Build main site
+        run: npm run build:main

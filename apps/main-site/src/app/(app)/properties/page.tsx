@@ -1,10 +1,10 @@
-import { requireUser } from "@/lib/auth/guard";
-import { getCurrentTenant } from "@/lib/auth/tenant";
-import { listProperties, listClients } from "@/lib/domain/service";
+import { requireUser } from "@terravado/core/auth/guard";
+import { getCurrentTenant } from "@terravado/core/auth/tenant";
+import { listProperties, listClients } from "@terravado/core/domain/service";
 import { createPropertyAction, deletePropertyAction, smartCreatePropertyAction } from "@/app/actions";
 import AddressAutocomplete from "@/components/AddressAutocomplete";
-import { CORELOGIC_CONFIGURED } from "@/lib/integrations/property-data/corelogic";
-import { TITLES_CONFIGURED } from "@/lib/integrations/titles";
+import { CORELOGIC_CONFIGURED } from "@terravado/core/integrations/property-data/corelogic";
+import { TITLES_CONFIGURED } from "@terravado/core/integrations/titles";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";

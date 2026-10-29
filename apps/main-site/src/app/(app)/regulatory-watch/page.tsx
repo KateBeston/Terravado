@@ -1,6 +1,6 @@
-import { requireUser, requireCapability } from "@/lib/auth/guard";
-import { listRegulatoryAlerts } from "@/lib/regwatch/store";
-import { regSources, REG_CATEGORIES } from "@/lib/integrations/regwatch";
+import { requireUser, requireCapability } from "@terravado/core/auth/guard";
+import { listRegulatoryAlerts } from "@terravado/core/regwatch/store";
+import { regSources, REG_CATEGORIES } from "@terravado/core/integrations/regwatch";
 import { acknowledgeRegAlertAction, acknowledgeAllRegAction } from "@/app/actions";
 import Link from "next/link";
 
