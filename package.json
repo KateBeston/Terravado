@@ -2,30 +2,19 @@
   "name": "terravado",
   "version": "0.1.0",
   "private": true,
-  "description": "Terravado — property investment modelling platform",
+  "description": "Terravado monorepo — shared engine + domain packages consumed by the internal portal (ops + engine source of truth) and, next, the public main site.",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint",
-    "typecheck": "tsc --noEmit",
-    "verify:engine": "tsx scripts/verify-engine.ts",
-    "verify": "tsx scripts/verify-engine.ts",
-    "assure": "npm run typecheck && npm run verify:engine"
-  },
-  "dependencies": {
-    "@supabase/ssr": "0.5.2",
-    "@supabase/supabase-js": "2.45.4",
-    "next": "14.2.15",
-    "react": "18.3.1",
-    "react-dom": "18.3.1"
+    "dev": "npm --workspace terravado-internal-portal run dev",
+    "build": "npm --workspace terravado-internal-portal run build",
+    "typecheck": "npm --workspace terravado-internal-portal run typecheck",
+    "verify": "npm --workspace @terravado/engine run verify",
+    "assure": "npm run typecheck && npm run verify"
   },
   "devDependencies": {
-    "@types/node": "20.16.11",
-    "@types/react": "18.3.11",
-    "@types/react-dom": "18.3.0",
-    "eslint": "8.57.1",
-    "eslint-config-next": "14.2.15",
     "tsx": "4.23.12",
     "typescript": "5.6.3"
   }

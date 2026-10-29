@@ -1,0 +1,10 @@
+{
+  "name": "@terravado/domain",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Terravado shared domain — model types, the Entity/record base, and finance helpers. No persistence, no UI.",
+  "exports": {
+    ".": "./src/index.ts",
+    "./*": "./src/*.ts"
+  }
+}

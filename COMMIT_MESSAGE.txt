@@ -1,0 +1,43 @@
+Monorepo: extract shared engine + domain packages (step 1 of the two-app split)
+
+Context
+Terravado is two apps sharing one engine and one database (see
+claude/terravado-target-architecture.md): a public MAIN SITE where advisers,
+brokers, consultants and their clients log in and work, and the INTERNAL PORTAL
+(engine source of truth + master DB + internal operations). This is step 1:
+stand up the monorepo and extract the shared engine, with nothing user-visible
+changing yet. The main-site app comes next.
+
+Structure (was a single Next app; now npm workspaces)
+- packages/engine   — @terravado/engine: the calculators (tax-data, cgt, firb,
+  depreciation, landtax, engine, seeds) + the assurance suite + the verify
+  script. The source of truth both apps import.
+- packages/domain   — @terravado/domain: shared model types, finance helpers,
+  and the base Entity record type (data/repository now re-exports Entity from
+  here, so nothing else needed repointing).
+- apps/internal-portal — the existing Next app, unchanged in behaviour. Keeps
+  data/service/seed, supabase, auth, integrations, components and routes.
+
+How the apps consume the packages
+- npm workspaces link them locally. Both packages ship TypeScript source and are
+  listed in the app's transpilePackages, so Next compiles them directly — no
+  build step per package, no version drift, one engine.
+- App imports repointed: @/lib/engine/* and relative ./engine/* -> @terravado/engine/*;
+  @/lib/assurance/* -> @terravado/engine/assurance/*; domain types/finances ->
+  @terravado/domain/*. App behaviour is identical.
+
+Deploy
+- One repo, two Vercel projects. The internal portal deploys with root directory
+  apps/internal-portal (its vercel.json — syd1, the regwatch cron — travels with it).
+  The main-site project will point at apps/main-site once it exists.
+
+Verified
+- @terravado/engine verify: 40/40 assurance checks pass.
+- apps/internal-portal: tsc --noEmit clean; next build green.
+- Booted and hit /, /properties/[id]/modelling, /properties/[id]/foreign,
+  /shortlist, /portfolio — all 200, and the engine computes at runtime from the
+  shared package (foreign-investor overlay renders $105,600 from live calc),
+  confirming the packages resolve at build AND runtime.
+
+Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_015DMV1vb1QzHwYuwMuVbkoV

@@ -1,0 +1,16 @@
+{
+  "name": "@terravado/engine",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Terravado modelling engine — projections, tax, land tax, depreciation, CGT, FIRB, feasibility, Monte Carlo, equity chain, scorecard/verdict, plus the assurance suite. The source of truth both apps pull from.",
+  "exports": {
+    ".": "./src/index.ts",
+    "./*": "./src/*.ts"
+  },
+  "scripts": {
+    "verify": "tsx scripts/verify-engine.ts"
+  },
+  "dependencies": {
+    "@terravado/domain": "*"
+  }
+}
