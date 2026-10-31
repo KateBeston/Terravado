@@ -16,6 +16,7 @@ _Last synced: 31 Oct 2026._
 - [terravado-account-model.md](./terravado-account-model.md) — account types, roles, capabilities, deal-scoped sharing.
 - [terravado-bank-data-strategy.md](./terravado-bank-data-strategy.md) — Open Banking / CDR consumer-data path (sandbox now, representative later).
 - [terravado-stock-and-advisor-module.md](./terravado-stock-and-advisor-module.md) — developer-stock (advisor-side) + advisor business tooling spec.
+- [terravado-investment-strategies-module.md](./terravado-investment-strategies-module.md) — staff-facing strategy/climate layer above the calculators; the 2026 market analysis + a SWOT-able strategy catalogue.
 
 ## Compliance & accuracy
 - [terravado-tax-legislation-review.md](./terravado-tax-legislation-review.md) — the tax surface, versioned data layer, **2026 budget structural changes**.

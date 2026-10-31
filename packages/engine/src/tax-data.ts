@@ -71,6 +71,18 @@ export interface TaxData {
   gstRate: number;
   cgtDiscount: { individual: number; company: number; smsf: number };
   effectiveLives: [string, number][];
+  /* --- 2026-budget structural levers (optional; a block without them behaves
+     as the pre-budget regime) -------------------------------------------- */
+  negativeGearing?: {
+    newBuildsRetainOffset: boolean;      // NG offset retained on new residential
+    budgetNightISO: string;              // established acquired after this date is caught
+    quarantineFromFYStart: number;       // first FY-start year the restriction applies (2027)
+  };
+  cgtRegime?: {
+    kind: "discount" | "indexed-floor";  // post-1-Jul-2027 established = indexed-floor
+    minEffectiveRatePct?: number;        // 30% floor on the real gain
+    newPropertyMayElectDiscount?: boolean;
+  };
 }
 
 export const TAX_DATA: TaxData = {
@@ -126,6 +138,9 @@ export const TAX_DATA: TaxData = {
   },
   gstRate: 0.10,
   cgtDiscount: { individual: .50, company: 0, smsf: 1 / 3 },
+  // Pre-2026-budget regime: NG offsets other income on all property; flat CGT discount.
+  negativeGearing: { newBuildsRetainOffset: true, budgetNightISO: "2026-05-12", quarantineFromFYStart: 2027 },
+  cgtRegime: { kind: "discount", minEffectiveRatePct: 30, newPropertyMayElectDiscount: true },
 
   effectiveLives: [
     ["Carpet", 8], ["Vinyl / laminate flooring", 10], ["Blinds", 10], ["Curtains", 6],
@@ -135,6 +150,59 @@ export const TAX_DATA: TaxData = {
     ["Light shades", 5], ["Furniture (loose)", 13], ["Clothes dryer", 10], ["Exhaust fan", 10],
   ],
 };
+
+/* ===========================================================================
+   AU-2027-28 — the post-2026-budget regime (future-dated, selected by date).
+   Only the FEDERAL levers change from AU-2026-27: the bottom bracket drops to
+   14% (legislated from 1 Jul 2027), negative gearing is restricted to new
+   builds for established property acquired after budget night, and the CGT
+   50% discount is replaced by indexation + a 30% minimum effective rate on
+   established property. State duty/land-tax scales are unchanged, so they are
+   inherited from the 2026-27 block. Kept beside it for historical
+   reproducibility; `taxDataFor(date)` picks the right one.
+   =========================================================================== */
+export const TAX_DATA_2027_28: TaxData = {
+  ...TAX_DATA,
+  version: "AU-2027-28",
+  effectiveFrom: "2027-07-01",
+  source: "State revenue offices & ATO + 2026 Federal Budget (12 May 2026). Indicative — verify before reliance.",
+  incomeTax: {
+    // 2027-28 resident scale: bottom bracket 15% → 14% from 1 Jul 2027.
+    AU: (ti) => {
+      const t = ti <= 18200 ? 0 : ti <= 45000 ? .14 * (ti - 18200) : ti <= 135000 ? 3752 + .30 * (ti - 45000)
+        : ti <= 190000 ? 30752 + .37 * (ti - 135000) : 51102 + .45 * (ti - 190000);
+      return t + medicareLevy(ti);
+    },
+  },
+  marginalRate: {
+    // Incl. Medicare (2%): 0 / 16 / 32 / 39 / 47.
+    AU: (ti) => ti <= 18200 ? 0 : ti <= 45000 ? 16 : ti <= 135000 ? 32 : ti <= 190000 ? 39 : 47,
+  },
+  negativeGearing: { newBuildsRetainOffset: true, budgetNightISO: "2026-05-12", quarantineFromFYStart: 2027 },
+  cgtRegime: { kind: "indexed-floor", minEffectiveRatePct: 30, newPropertyMayElectDiscount: true },
+};
+
+/** All versioned tax-data blocks, for the date selector and historical reproduction. */
+export const TAX_DATA_VERSIONS: TaxData[] = [TAX_DATA, TAX_DATA_2027_28];
+
+/** The Australian financial-year start year for a date (FY starts 1 July).
+    e.g. 2027-08-01 → 2027; 2027-03-01 → 2026. Defaults to today. */
+export function fyStartYear(dateISO?: string): number {
+  const d = dateISO ? new Date(dateISO) : new Date();
+  if (isNaN(+d)) return new Date().getFullYear();
+  const y = d.getUTCFullYear(), m = d.getUTCMonth() + 1;
+  return m >= 7 ? y : y - 1;
+}
+
+/** Pick the tax-data block in force on a date (latest effectiveFrom ≤ date).
+    Defaults to today → AU-2026-27 until 1 Jul 2027, AU-2027-28 thereafter. */
+export function taxDataFor(dateISO?: string): TaxData {
+  const d = dateISO || todayISO();
+  const sorted = [...TAX_DATA_VERSIONS].sort((a, b) => (a.effectiveFrom < b.effectiveFrom ? -1 : 1));
+  let chosen = sorted[0];
+  for (const v of sorted) if (v.effectiveFrom <= d) chosen = v;
+  return chosen;
+}
 
 export interface Country {
   name: string; sym: string; loc: string; area: string; rentPer: string; rp: number;

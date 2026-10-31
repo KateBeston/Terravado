@@ -10,7 +10,8 @@
    spillover). This makes the engine a pure, deterministic, testable module.
    =========================================================================== */
 
-import { COUNTRIES, TAX_DATA, num, clamp } from "./tax-data";
+import { COUNTRIES, TAX_DATA, num, clamp, fyStartYear } from "./tax-data";
+import { negativeGearingRestricted, smsfResidentialLeverageAllowed, dtiAssessment, type PropertyKind } from "./regime";
 
 /* ---- permissive domain types (shapes mirror the seed records) ------------ */
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -366,6 +367,14 @@ export function project(p: Property, opts: ProjectOpts = {}, ctx: EngineContext)
     : p.loan.repaymentType === "Interest-only, then P&I" ? num(p.loan.ioYears) * 12 : 0;
   let rolloverShock: any = null;
 
+  // 2026-budget negative-gearing regime: an established dwelling acquired after
+  // budget night has its losses quarantined from FY2027-28. Grandfathered (or
+  // no acquisition date) and new builds keep the offset — so legacy records are
+  // unaffected. The modelled FY for year y is baseFY + (y − 1).
+  const acquisitionDateISO: string | undefined = (p.market && p.market.purchaseDate) || undefined;
+  const propertyKind: PropertyKind = (p.entry && p.entry.propertyType === "new") ? "new" : "established";
+  const baseFY = fyStartYear(acquisitionDateISO);
+
   for (let y = 1; y <= N; y++) {
     let gY: number;
     if (isComm) {
@@ -460,7 +469,9 @@ export function project(p: Property, opts: ProjectOpts = {}, ctx: EngineContext)
     const dedInterest = interest * clamp(num(p.loan.purposeSplit, 100), 0, 100) / 100;
     const deductibleOpex = pmFee + lettingFee + maint + lt + loanFees + dedLedger - recovered;
     const taxable = grossRent - dedInterest - deductibleOpex - dep.total;
-    const taxEffect = taxable >= 0 ? -taxable * T.rate / 100 : (T.trapped ? 0 : -taxable * T.rate / 100);
+    const ngR = negativeGearingRestricted({ propertyKind, acquisitionDateISO, fyStartYear: baseFY + (y - 1) });
+    const lossBenefitBlocked = T.trapped || ngR.restricted;
+    const taxEffect = taxable >= 0 ? -taxable * T.rate / 100 : (lossBenefitBlocked ? 0 : -taxable * T.rate / 100);
 
     const preTaxCF = grossRent - repayments - opex - capex;
     const postTaxCF = preTaxCF + taxEffect;
@@ -474,7 +485,7 @@ export function project(p: Property, opts: ProjectOpts = {}, ctx: EngineContext)
       interest: Math.round(interest), principal: Math.round(principal), repayments: Math.round(repayments),
       opex: Math.round(opex), landTax: Math.round(lt), capex: Math.round(capex), recovered: Math.round(recovered),
       dep: Math.round(dep.total), d43: Math.round(dep.d43), d40: Math.round(dep.d40), scrap: Math.round(dep.scrap),
-      taxable: Math.round(taxable), taxEffect: Math.round(taxEffect),
+      taxable: Math.round(taxable), taxEffect: Math.round(taxEffect), ngRestricted: ngR.restricted,
       preTaxCF: Math.round(preTaxCF), postTaxCF: Math.round(postTaxCF), cumCash: Math.round(cumCash),
       weekly: Math.round(postTaxCF / 52),
       weeklyPayg: Math.round((preTaxCF + (p.tax.paygVariation ? taxEffect : 0)) / 52),
@@ -755,6 +766,7 @@ export function serviceability(client: Client, lender: Lender, opts: any, ctx: E
   return {
     lender: L, shaded, grossPersonal, assessedRent, existingRent, netIncome, cards, hecs, other,
     existingAssessed, hem, commitments, surplus, capacity, assessRate, existingDebt, totalDebt, dti, nsr, pass,
+    dtiHigh: dtiAssessment(dti).high, dtiNote: dtiAssessment(dti).note,
     headroom: capacity - proposedLoan,
   };
 }
@@ -950,6 +962,24 @@ export function verdictOf(p: Property, P: ReturnType<typeof project>, ctx: Engin
   if (num(p.loan.purposeSplit, 100) < 100) f.push(["Med", `Only ${p.loan.purposeSplit}% of interest is deductible — purpose test applied`]);
   if (SV && SV.capacity < P.acq.loan) f.push(["High", `${SV.lender.name}: capacity ${m$(SV.capacity, p, ctx)} is below the ${m$(P.acq.loan, p, ctx)} loan required`]);
   if (SV && SV.dti > num(SV.lender.maxDTI)) f.push(["Med", `DTI ${SV.dti.toFixed(1)}× exceeds ${SV.lender.name}'s ${SV.lender.maxDTI}× limit`]);
+
+  // 2026-budget regime flags.
+  const purchaseDateISO: string | undefined = (p.market && p.market.purchaseDate) || undefined;
+  const pKind: PropertyKind = (p.entry && p.entry.propertyType === "new") ? "new" : "established";
+  const baseFyV = fyStartYear(purchaseDateISO);
+  const horizonFyV = baseFyV + Math.max(0, Math.round(num(p.horizon, 10)) - 1);
+  const ngStart = negativeGearingRestricted({ propertyKind: pKind, acquisitionDateISO: purchaseDateISO, fyStartYear: baseFyV });
+  const ngEnd = negativeGearingRestricted({ propertyKind: pKind, acquisitionDateISO: purchaseDateISO, fyStartYear: horizonFyV });
+  const everNegativelyGeared = P.rows.some((r: any) => r.taxable < 0);
+  if (!P.tax.trapped && everNegativelyGeared && (ngStart.restricted || ngEnd.restricted)) {
+    const sev = ngStart.restricted ? "High" : "Med";
+    f.push([sev, "Negative-gearing losses quarantined under the 2027-28 rules (established dwelling acquired after 12 May 2026) — losses carry forward against rent/CGT, no offset against other income"]);
+  }
+  if (P.tax.entity && P.tax.entity.type === "SMSF" && String(p.assetClass || "").toLowerCase().startsWith("resid") && P.acq.loan > 0) {
+    const smsf = smsfResidentialLeverageAllowed({ assetClass: p.assetClass, isNewLRBA: true, contractDateISO: purchaseDateISO });
+    if (!smsf.allowed) f.push(["High", "SMSF cannot borrow to buy residential — new LRBAs banned from 10 Aug 2026; fund with SMSF cash or use business real property"]);
+  }
+  if (SV && SV.dti >= 6) f.push(["Med", `DTI ${SV.dti.toFixed(1)}× ≥ 6 — APRA caps these to ~20% of a lender's new lending; expect fewer lenders and pricing/overlay scrutiny`]);
 
   const agg = portfolioLandTax(1, ctx);
   const solo = standaloneLandTax(p, 1);

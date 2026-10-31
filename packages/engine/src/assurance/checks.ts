@@ -10,7 +10,8 @@
    figure still matches the live source, since real rates and policies move.
    =========================================================================== */
 
-import { TAX_DATA, medicareLevy, medicareLevySurcharge, division293, vicVacantResidentialLandTax } from "../tax-data";
+import { TAX_DATA, TAX_DATA_2027_28, taxDataFor, fyStartYear, medicareLevy, medicareLevySurcharge, division293, vicVacantResidentialLandTax } from "../tax-data";
+import { negativeGearingRestricted, smsfResidentialLeverageAllowed, dtiAssessment } from "../regime";
 import { aggregateLandTax } from "../landtax";
 import { modelDepreciation } from "../depreciation";
 import { disposalCgt } from "../cgt";
@@ -130,6 +131,88 @@ const referenceChecks: CheckDef[] = [
     id: "gst-rate", category: "GST", description: "GST rate = 10%",
     source: "ATO — GST",
     run: () => ({ expected: 0.1, actual: TAX_DATA.gstRate, pass: near(TAX_DATA.gstRate, 0.1) }),
+  },
+
+  /* ---- 2027-28 regime: income tax (14% bottom bracket from 1 Jul 2027) ---- */
+  ref("inctax-2728-100k", "Income tax (2027-28)", "AU income tax + Medicare on $100,000 (14% bracket)", "ATO — legislated 2027-28 scale", 22252, () => TAX_DATA_2027_28.incomeTax.AU(100000)),
+  ref("inctax-2728-200k", "Income tax (2027-28)", "AU income tax + Medicare on $200,000 (14% bracket)", "ATO — legislated 2027-28 scale", 59602, () => TAX_DATA_2027_28.incomeTax.AU(200000)),
+
+  /* ---- Tax-data versioning: the date selector picks the in-force block ---- */
+  {
+    id: "taxdata-select-2026", category: "Tax-data versioning", description: "taxDataFor(2026-09-01) → AU-2026-27",
+    source: "Engine — effective-dated selection",
+    run: () => { const v = taxDataFor("2026-09-01").version; return { expected: "AU-2026-27", actual: v, pass: v === "AU-2026-27" }; },
+  },
+  {
+    id: "taxdata-select-2027", category: "Tax-data versioning", description: "taxDataFor(2027-08-01) → AU-2027-28",
+    source: "Engine — effective-dated selection",
+    run: () => { const v = taxDataFor("2027-08-01").version; return { expected: "AU-2027-28", actual: v, pass: v === "AU-2027-28" }; },
+  },
+  {
+    id: "taxdata-select-pre-start", category: "Tax-data versioning", description: "taxDataFor(2027-06-30) still AU-2026-27 (before 1 Jul 2027)",
+    source: "Engine — effective-dated selection",
+    run: () => { const v = taxDataFor("2027-06-30").version; return { expected: "AU-2026-27", actual: v, pass: v === "AU-2026-27" }; },
+  },
+  ref("fy-start-aug", "Tax-data versioning", "FY start for 2027-08-01 is 2027", "Engine — AU financial year", 2027, () => fyStartYear("2027-08-01")),
+  ref("fy-start-mar", "Tax-data versioning", "FY start for 2027-03-01 is 2026", "Engine — AU financial year", 2026, () => fyStartYear("2027-03-01")),
+
+  /* ---- Negative gearing: the 2027-28 quarantine decision ------------------ */
+  {
+    id: "ng-established-restricted", category: "Negative gearing", description: "Established, acquired 2026-06-01, FY2027-28 → quarantined",
+    source: "2026 Budget — NG restriction (established, post-budget-night)",
+    run: () => { const r = negativeGearingRestricted({ propertyKind: "established", acquisitionDateISO: "2026-06-01", fyStartYear: 2027 }).restricted; return { expected: "restricted", actual: r ? "restricted" : "offset", pass: r === true }; },
+  },
+  {
+    id: "ng-grandfathered", category: "Negative gearing", description: "Established, acquired 2026-02-14 (pre-budget) → offset retained",
+    source: "2026 Budget — grandfathering (on/before 12 May 2026)",
+    run: () => { const r = negativeGearingRestricted({ propertyKind: "established", acquisitionDateISO: "2026-02-14", fyStartYear: 2030 }).restricted; return { expected: "offset", actual: r ? "restricted" : "offset", pass: r === false }; },
+  },
+  {
+    id: "ng-newbuild", category: "Negative gearing", description: "New build, acquired 2026-06-01 → offset retained",
+    source: "2026 Budget — NG retained on new residential",
+    run: () => { const r = negativeGearingRestricted({ propertyKind: "new", acquisitionDateISO: "2026-06-01", fyStartYear: 2030 }).restricted; return { expected: "offset", actual: r ? "restricted" : "offset", pass: r === false }; },
+  },
+  {
+    id: "ng-not-yet", category: "Negative gearing", description: "Established, post-budget, FY2026-27 → not yet in force",
+    source: "2026 Budget — restriction starts FY2027-28",
+    run: () => { const r = negativeGearingRestricted({ propertyKind: "established", acquisitionDateISO: "2026-06-01", fyStartYear: 2026 }).restricted; return { expected: "offset", actual: r ? "restricted" : "offset", pass: r === false }; },
+  },
+
+  /* ---- CGT (2027-28): indexation + 30% floor, and the new-property election */
+  ref("cgt-indexed-39", "CGT (2027-28)", "Established, $200k nominal gain, factor 1.10, 39% → $54,600 (indexed, 39% > floor)", "2026 Budget — CGT indexation",
+    54600, () => disposalCgt({ entityType: "individual", salePrice: 800000, purchasePrice: 600000, heldMonths: 24, marginalRatePct: 39, cgtRegime: "indexed-floor", propertyKind: "established", indexationFactor: 1.10 }).cgtPayable),
+  ref("cgt-indexed-floor-binds", "CGT (2027-28)", "Established, same gain at 20% marginal → $42,000 (30% floor binds)", "2026 Budget — CGT 30% minimum effective rate",
+    42000, () => disposalCgt({ entityType: "individual", salePrice: 800000, purchasePrice: 600000, heldMonths: 24, marginalRatePct: 20, cgtRegime: "indexed-floor", propertyKind: "established", indexationFactor: 1.10 }).cgtPayable),
+  ref("cgt-new-election", "CGT (2027-28)", "New property elects the lower of discount vs indexed → $39,000 (discount)", "2026 Budget — new property may elect the 50% discount",
+    39000, () => disposalCgt({ entityType: "individual", salePrice: 800000, purchasePrice: 600000, heldMonths: 24, marginalRatePct: 39, cgtRegime: "indexed-floor", propertyKind: "new", indexationFactor: 1.10 }).cgtPayable),
+
+  /* ---- SMSF residential LRBA ban (from 10 Aug 2026) ---------------------- */
+  {
+    id: "smsf-resi-new-banned", category: "SMSF lending", description: "New residential LRBA, contract 2026-09-01 → not allowed",
+    source: "2026 — SMSF residential LRBA ban (10 Aug 2026)",
+    run: () => { const ok = smsfResidentialLeverageAllowed({ assetClass: "Residential", isNewLRBA: true, contractDateISO: "2026-09-01" }).allowed; return { expected: "not allowed", actual: ok ? "allowed" : "not allowed", pass: ok === false }; },
+  },
+  {
+    id: "smsf-commercial-ok", category: "SMSF lending", description: "Commercial (business real property) LRBA → allowed",
+    source: "2026 — business real property unaffected",
+    run: () => { const ok = smsfResidentialLeverageAllowed({ assetClass: "Commercial", isNewLRBA: true, contractDateISO: "2026-09-01" }).allowed; return { expected: "allowed", actual: ok ? "allowed" : "not allowed", pass: ok === true }; },
+  },
+  {
+    id: "smsf-existing-ok", category: "SMSF lending", description: "Existing residential LRBA → grandfathered (allowed)",
+    source: "2026 — existing LRBAs grandfathered",
+    run: () => { const ok = smsfResidentialLeverageAllowed({ assetClass: "Residential", isNewLRBA: false }).allowed; return { expected: "allowed", actual: ok ? "allowed" : "not allowed", pass: ok === true }; },
+  },
+
+  /* ---- APRA DTI cap flag ------------------------------------------------- */
+  {
+    id: "dti-high-6", category: "APRA / DTI", description: "DTI 6.0× flagged as inside the capped band",
+    source: "APRA — DTI ≥ 6 cap (≤20% of new lending, from 1 Feb 2026)",
+    run: () => { const h = dtiAssessment(6).high; return { expected: "high", actual: h ? "high" : "ok", pass: h === true }; },
+  },
+  {
+    id: "dti-ok-5_5", category: "APRA / DTI", description: "DTI 5.5× below the cap band",
+    source: "APRA — DTI ≥ 6 cap",
+    run: () => { const h = dtiAssessment(5.5).high; return { expected: "ok", actual: h ? "high" : "ok", pass: h === false }; },
   },
 ];
 

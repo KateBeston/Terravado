@@ -1,34 +1,49 @@
-Docs: store project/governance docs in the portal + 2026 budget legislation update
+Engine: AU-2027-28 regime (negative gearing, CGT, SMSF LRBA, APRA DTI)
 
-Stores the full set of Terravado strategy, architecture, compliance and
-competitive docs in the repo so they travel with the code and the internal
-portal, and updates the tax-legislation review for the 2026 Federal Budget.
+Adds the post-2026-budget tax regime as a date-selected layer beside AU-2026-27.
+The structural changes bite from their real start dates; today's modelling is
+unchanged until the engine is actually asked about a post-budget deal or a
+future financial year.
 
-New: apps/internal-portal/docs/project/ (15 docs + README index)
-- Strategy/product: business-plan, target-architecture, platform-portal-
-  features-and-modelling, data-strategy, account-model, bank-data-strategy,
-  stock-and-advisor-module.
-- Compliance/accuracy: tax-legislation-review, regulatory-compliance-review,
-  accuracy-and-assurance-safeguards.
-- Competitive/commercial: htag-vs-terravado-teardown, htag-licence-assessment,
-  ash-dino-questions-and-deal-terms.
-- Parked: project-marketing-platform-idea, future-partnerships.
-These mirror the canonical copies in the Claude project workspace; keep both
-in sync when either changes.
+Tax data (packages/engine/src/tax-data.ts)
+- New TAX_DATA_2027_28 block (14% bottom bracket from 1 Jul 2027; other federal
+  levers carried over; state duty/land-tax scales inherited unchanged).
+- taxDataFor(date) selector + fyStartYear(date) helper. Current in-force block
+  stays AU-2026-27 until 1 Jul 2027 — nothing changes for today's dates.
+- TaxData gains optional negativeGearing + cgtRegime descriptors.
 
-Legislation update (the 2026 structural shift), captured in the tax review:
-- Negative gearing limited to new builds from 1 Jul 2027; losses on
-  established dwellings bought after 12 May 2026 quarantined (grandfathered
-  before budget night).
-- CGT 50% discount replaced from 1 Jul 2027 by cost-base indexation + a 30%
-  minimum effective rate on established property (new property may elect the
-  50% discount); dual regime splits a gain straddling the start date.
-- SMSF new residential LRBAs banned, live from 10 Aug 2026 (business real
-  property still allowed; existing LRBAs grandfathered).
-- APRA DTI cap (<=20% of new loans at DTI >= 6) from 1 Feb 2026; 3% buffer held.
-All four are flagged as the forthcoming AU-2027-28 engine regime (date-aware,
-grandfathered rules beside the current AU-2026-27). No engine/code change in
-this commit — docs only; the current-FY engine stays correct.
+Regime rules (packages/engine/src/regime.ts, new) — pure, testable decisions
+- negativeGearingRestricted(): established dwellings acquired after budget night
+  (12 May 2026) have losses quarantined from FY2027-28; new builds and
+  pre-budget (grandfathered) acquisitions keep the offset.
+- smsfResidentialLeverageAllowed(): new residential LRBAs banned from 10 Aug
+  2026; business real property and existing LRBAs unaffected.
+- dtiAssessment(): flags DTI >= 6 against the APRA cap (<=20% of new lending).
+
+CGT (packages/engine/src/cgt.ts)
+- New opt-in "indexed-floor" regime: cost-base indexation + a 30% minimum
+  effective rate on the real gain (established), the new-property election
+  (lower of discount vs indexed), and a time-apportioned pre/post 1 Jul 2027
+  straddle split. SMSFs keep the 1/3 discount; company unchanged.
+- Default path ("discount") is byte-for-byte the prior behaviour, so existing
+  CGT checks are untouched.
+
+Wiring (packages/engine/src/engine.ts)
+- project(): date-aware negative-gearing quarantine in the loss branch, keyed
+  off the property's purchase date + new/established flag and the modelled FY.
+  Records without a post-budget purchase date are unaffected (seeds included).
+- serviceability(): DTI >= 6 flag (dtiHigh/dtiNote).
+- verdictOf(): flags for quarantined negative gearing, the SMSF residential
+  LRBA ban, and DTI >= 6.
+
+Assurance (packages/engine/src/assurance/checks.ts)
+- +19 known-answer checks (40 -> 59): 2027-28 income tax, the date selector and
+  FY helper, the negative-gearing quarantine decisions, indexed CGT + the 30%
+  floor + the new-property election, the SMSF LRBA ban, and the DTI flag.
+
+Verified: engine 59/59; both apps tsc clean; both production builds green. Seed
+projection outputs unchanged (grandfathered), confirming the change is inert on
+legacy records.
 
 Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_015DMV1vb1QzHwYuwMuVbkoV
