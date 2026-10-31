@@ -10,8 +10,9 @@
    spillover). This makes the engine a pure, deterministic, testable module.
    =========================================================================== */
 
-import { COUNTRIES, TAX_DATA, num, clamp, fyStartYear } from "./tax-data";
+import { COUNTRIES, TAX_DATA, num, clamp, fyStartYear, registrationFeesTotal } from "./tax-data";
 import { negativeGearingRestricted, smsfResidentialLeverageAllowed, dtiAssessment, type PropertyKind } from "./regime";
+import { disposalCgt, cgtEntityOf } from "./cgt";
 
 /* ---- permissive domain types (shapes mirror the seed records) ------------ */
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -238,13 +239,25 @@ export function acquisition(p: Property) {
   const lmiRate = lvr <= .80 ? 0 : lvr <= .85 ? .009 : lvr <= .90 ? .018 : lvr <= .95 ? .031 : .045;
   const lmi = loanBase * lmiRate;
   const items = (e.items || []).reduce((a: number, x: any) => a + num(x.amount), 0);
+  const regFees = e.autoRegistrationFees ? registrationFeesTotal(p.loc.region) : 0;
   const loan = loanBase + (e.capitaliseLmi ? lmi : 0);
   const depositCash = price - loanBase;
-  const cashIn = depositCash + duty + items + (e.capitaliseLmi ? 0 : lmi);
+  const cashIn = depositCash + duty + items + regFees + (e.capitaliseLmi ? 0 : lmi);
   return {
-    autoDuty, fhbRelief, surcharge, duty, lmi, lmiRate, lvr, loan, loanBase, items,
-    depositCash, cashIn, totalAcqCosts: duty + items + lmi,
+    autoDuty, fhbRelief, surcharge, duty, lmi, lmiRate, lvr, loan, loanBase, items, regFees,
+    depositCash, cashIn, totalAcqCosts: duty + items + regFees + lmi,
   };
+}
+
+/** Borrowing costs (loan establishment, LMI, mortgage registration, valuation,
+    lender's legals — s25-25) are deductible over 5 years, or the loan term if
+    shorter. Returns the amount deductible in a given year (0 outside the window
+    or when none were entered). */
+export function borrowingCostAmortisation(total: number, loanTermYears: number, year: number): number {
+  const t = Math.max(0, num(total));
+  if (t <= 0) return 0;
+  const years = Math.max(1, Math.min(5, Math.round(num(loanTermYears, 30))));
+  return year <= years ? t / years : 0;
 }
 
 /* ===========================================================================
@@ -374,6 +387,11 @@ export function project(p: Property, opts: ProjectOpts = {}, ctx: EngineContext)
   const acquisitionDateISO: string | undefined = (p.market && p.market.purchaseDate) || undefined;
   const propertyKind: PropertyKind = (p.entry && p.entry.propertyType === "new") ? "new" : "established";
   const baseFY = fyStartYear(acquisitionDateISO);
+  // Borrowing-cost amortisation (s25-25) and vacant-land holding-cost denial
+  // (s26-102). Both inert by default: no borrowing-cost figure → 0; not vacant
+  // land → normal deductions.
+  const borrowingCostsTotal = num(p.loan && p.loan.borrowingCosts);
+  const vacantLand = !!(p.tax && p.tax.vacantLand);
 
   for (let y = 1; y <= N; y++) {
     let gY: number;
@@ -468,7 +486,10 @@ export function project(p: Property, opts: ProjectOpts = {}, ctx: EngineContext)
 
     const dedInterest = interest * clamp(num(p.loan.purposeSplit, 100), 0, 100) / 100;
     const deductibleOpex = pmFee + lettingFee + maint + lt + loanFees + dedLedger - recovered;
-    const taxable = grossRent - dedInterest - deductibleOpex - dep.total;
+    const bcDeduction = borrowingCostAmortisation(borrowingCostsTotal, num(p.loan.termYears, 30), y);
+    const taxable = vacantLand
+      ? grossRent // s26-102: holding-cost deductions denied on vacant land until a usable structure exists and is rented/available
+      : grossRent - dedInterest - deductibleOpex - dep.total - bcDeduction;
     const ngR = negativeGearingRestricted({ propertyKind, acquisitionDateISO, fyStartYear: baseFY + (y - 1) });
     const lossBenefitBlocked = T.trapped || ngR.restricted;
     const taxEffect = taxable >= 0 ? -taxable * T.rate / 100 : (lossBenefitBlocked ? 0 : -taxable * T.rate / 100);
@@ -496,9 +517,42 @@ export function project(p: Property, opts: ProjectOpts = {}, ctx: EngineContext)
 
   const last = rows[rows.length - 1];
   const sellCosts = last.value * num(p.agentFeePct) / 100 + num(p.sellLegals) + num(p.loan.dischargeFee);
-  const costBase = num(p.market.price) + acq.totalAcqCosts + cumCapex + sellCosts - cumD43;
-  const gain = Math.max(0, last.value - costBase);
-  const cgt = gain * (1 - T.cgt) * T.rate / 100;
+  // Regime-aware exit CGT. An established sale on/after 1 Jul 2027 uses the
+  // indexed + 30%-floor method (with the pre/post 1-Jul-2027 straddle split);
+  // a new build elects the better of discount vs indexed; otherwise the 50%
+  // discount. CPI compounded over the hold indexes the cost base. With no
+  // purchase date, or a sale before the regime start, this reproduces the
+  // prior 50%-discount figure exactly.
+  const heldYearsExit = N;
+  let saleDateISO: string | undefined;
+  if (acquisitionDateISO) {
+    const sd = new Date(acquisitionDateISO);
+    if (!isNaN(+sd)) { sd.setFullYear(sd.getFullYear() + heldYearsExit); saleDateISO = sd.toISOString().slice(0, 10); }
+  }
+  const regimeStartISO = "2027-07-01";
+  const useIndexed = !!(acquisitionDateISO && saleDateISO && saleDateISO >= regimeStartISO);
+  const indexationFactor = Math.pow(1 + num(p.market.cpi) / 100, Math.max(0, heldYearsExit));
+  const disp = disposalCgt({
+    entityType: cgtEntityOf(T.entity && T.entity.type),
+    salePrice: last.value,
+    sellingCosts: sellCosts,
+    purchasePrice: num(p.market.price),
+    acquisitionCosts: acq.totalAcqCosts,
+    capitalImprovements: cumCapex,
+    capitalWorksClaimed: cumD43,
+    heldMonths: clamp(N, 1, 40) * 12,
+    marginalRatePct: T.rate,
+    companyRatePct: (T.entity && T.entity.type === "Company") ? 30 : undefined,
+    cgtRegime: useIndexed ? "indexed-floor" : "discount",
+    propertyKind,
+    indexationFactor,
+    acquisitionDateISO,
+    saleDateISO,
+    regimeStartISO,
+  });
+  const costBase = disp.costBase;
+  const gain = Math.max(0, disp.grossGain);
+  const cgt = disp.cgtPayable;
   const netProceeds = last.value - sellCosts - last.balance - cgt;
 
   const flows = [-acq.cashIn].concat(rows.map((r, i) => r.postTaxCF + (i === rows.length - 1 ? netProceeds : 0)));
@@ -521,7 +575,7 @@ export function project(p: Property, opts: ProjectOpts = {}, ctx: EngineContext)
   return {
     rows, acq, ladder: L, demand: D, tax: T, isComm,
     baseGrowth: baseGrowthOf(p), g0, r0, vacWeeks, cal, trough, rateY1: rateFor(1), rolloverShock,
-    exit: { sellCosts, costBase, gain, cgt, netProceeds, saleValue: last.value },
+    exit: { sellCosts, costBase, gain, cgt, netProceeds, saleValue: last.value, cgtRegimeApplied: disp.regimeApplied },
     metrics: {
       irr, totalProfit: flows.reduce((a, b) => a + b, 0),
       breakeven: (rows.find((r) => r.postTaxCF >= 0) || {}).year || null,

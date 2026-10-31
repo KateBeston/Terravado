@@ -10,7 +10,7 @@
    figure still matches the live source, since real rates and policies move.
    =========================================================================== */
 
-import { TAX_DATA, TAX_DATA_2027_28, taxDataFor, fyStartYear, medicareLevy, medicareLevySurcharge, division293, vicVacantResidentialLandTax } from "../tax-data";
+import { TAX_DATA, TAX_DATA_2027_28, taxDataFor, fyStartYear, registrationFeesTotal, medicareLevy, medicareLevySurcharge, division293, vicVacantResidentialLandTax } from "../tax-data";
 import { negativeGearingRestricted, smsfResidentialLeverageAllowed, dtiAssessment } from "../regime";
 import { aggregateLandTax } from "../landtax";
 import { modelDepreciation } from "../depreciation";
@@ -18,7 +18,7 @@ import { disposalCgt } from "../cgt";
 import { firbApplicationFee, firbVacancyFeeAnnual, foreignInvestorOverlay } from "../firb";
 import { seedContext } from "../seeds";
 import {
-  project, monteCarlo, feasibility, serviceability, valuation, equityChain,
+  project, monteCarlo, feasibility, serviceability, valuation, equityChain, borrowingCostAmortisation,
 } from "../engine";
 
 export type CheckStatus = "pass" | "fail";
@@ -113,6 +113,7 @@ const referenceChecks: CheckDef[] = [
   },
   ref("inctax-au-100k", "Income tax", "AU income tax + Medicare on $100,000", "ATO — individual rates 2026–27", 22520, () => TAX_DATA.incomeTax.AU(100000)),
   ref("inctax-au-200k", "Income tax", "AU income tax + Medicare on $200,000", "ATO — individual rates 2026–27", 59870, () => TAX_DATA.incomeTax.AU(200000)),
+  ref("inctax-lito-40k", "Income tax", "AU income tax + Medicare on $40,000 incl LITO → $3,495", "ATO — Low Income Tax Offset", 3495, () => TAX_DATA.incomeTax.AU(40000)),
   ref("medicare-phasein-30k", "Medicare", "Medicare levy low-income phase-in at $30,000 → $400", "ATO — Medicare levy thresholds (single)", 400, () => medicareLevy(30000)),
   ref("medicare-nil-25k", "Medicare", "Medicare levy nil below the threshold ($25,000)", "ATO — Medicare levy thresholds (single)", 0, () => medicareLevy(25000)),
   ref("mls-single-160k", "Medicare", "MLS: single on $160,000 without hospital cover → $2,400 (1.5%)", "ATO — Medicare Levy Surcharge (single tiers)", 2400, () => medicareLevySurcharge(160000, false)),
@@ -132,6 +133,11 @@ const referenceChecks: CheckDef[] = [
     source: "ATO — GST",
     run: () => ({ expected: 0.1, actual: TAX_DATA.gstRate, pass: near(TAX_DATA.gstRate, 0.1) }),
   },
+  ref("regfees-nsw", "Acquisition costs", "NSW registration fees (transfer + mortgage) → $348", "Indicative — Revenue NSW / NSW LRS (verify)", 348, () => registrationFeesTotal("NSW")),
+  ref("regfees-qld", "Acquisition costs", "QLD registration fees (transfer + mortgage) → $470", "Indicative — Titles Queensland (verify)", 470, () => registrationFeesTotal("QLD")),
+  ref("borrowcost-5yr", "Deductions", "Borrowing costs $2,500 amortised: year 1 = $500 (5-yr)", "ATO — s25-25 borrowing costs", 500, () => borrowingCostAmortisation(2500, 30, 1)),
+  ref("borrowcost-shortterm", "Deductions", "Borrowing costs $3,000 on a 3-yr loan: year 1 = $1,000", "ATO — s25-25 (loan term if under 5 years)", 1000, () => borrowingCostAmortisation(3000, 3, 1)),
+  ref("borrowcost-afterwindow", "Deductions", "Borrowing costs fully written off: year 6 on a 30-yr loan = $0", "ATO — s25-25 (5-year cap)", 0, () => borrowingCostAmortisation(2500, 30, 6)),
 
   /* ---- 2027-28 regime: income tax (14% bottom bracket from 1 Jul 2027) ---- */
   ref("inctax-2728-100k", "Income tax (2027-28)", "AU income tax + Medicare on $100,000 (14% bracket)", "ATO — legislated 2027-28 scale", 22252, () => TAX_DATA_2027_28.incomeTax.AU(100000)),
@@ -185,6 +191,16 @@ const referenceChecks: CheckDef[] = [
     42000, () => disposalCgt({ entityType: "individual", salePrice: 800000, purchasePrice: 600000, heldMonths: 24, marginalRatePct: 20, cgtRegime: "indexed-floor", propertyKind: "established", indexationFactor: 1.10 }).cgtPayable),
   ref("cgt-new-election", "CGT (2027-28)", "New property elects the lower of discount vs indexed → $39,000 (discount)", "2026 Budget — new property may elect the 50% discount",
     39000, () => disposalCgt({ entityType: "individual", salePrice: 800000, purchasePrice: 600000, heldMonths: 24, marginalRatePct: 39, cgtRegime: "indexed-floor", propertyKind: "new", indexationFactor: 1.10 }).cgtPayable),
+  {
+    id: "cgt-straddle-between", category: "CGT (2027-28)", description: "Straddle (acq 2026 → sale 2037) sits between the pure discount and pure indexed figures",
+    source: "2026 Budget — 1 Jul 2027 transitional apportionment",
+    run: () => {
+      const disc = disposalCgt({ entityType: "individual", salePrice: 800000, purchasePrice: 600000, heldMonths: 132, marginalRatePct: 39, cgtRegime: "discount", propertyKind: "established", indexationFactor: 1.0 }).cgtPayable;
+      const idx = disposalCgt({ entityType: "individual", salePrice: 800000, purchasePrice: 600000, heldMonths: 132, marginalRatePct: 39, cgtRegime: "indexed-floor", propertyKind: "established", indexationFactor: 1.0 }).cgtPayable;
+      const strad = disposalCgt({ entityType: "individual", salePrice: 800000, purchasePrice: 600000, heldMonths: 132, marginalRatePct: 39, cgtRegime: "indexed-floor", propertyKind: "established", indexationFactor: 1.0, acquisitionDateISO: "2026-01-01", saleDateISO: "2037-01-01" }).cgtPayable;
+      return { expected: "disc < straddle < indexed", actual: `${Math.round(disc)} < ${Math.round(strad)} < ${Math.round(idx)}`, pass: strad > disc && strad < idx };
+    },
+  },
 
   /* ---- SMSF residential LRBA ban (from 10 Aug 2026) ---------------------- */
   {

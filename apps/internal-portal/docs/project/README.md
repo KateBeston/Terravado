@@ -6,7 +6,9 @@ canonical copies kept in the Claude project workspace; when a doc changes there,
 update the copy here too (and vice versa). Engineering docs (`../SECURITY.md`,
 `../ASSURANCE.md`) live one level up.
 
-_Last synced: 31 Oct 2026._
+_Last synced: 1 Nov 2026._
+
+**Live tracker:** [terravado-backlog.md](./terravado-backlog.md) — the running log of what's done, in flight, and recommended-but-not-yet-built across the whole project. Start here.
 
 ## Strategy & product
 - [terravado-business-plan.md](./terravado-business-plan.md) — what Terravado is, the wedge, model, GTM, risks, roadmap.

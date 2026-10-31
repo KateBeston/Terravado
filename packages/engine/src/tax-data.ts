@@ -48,6 +48,16 @@ export function division293(incomePlusContributions: number, concessionalContrib
   return 0.15 * Math.min(Math.max(0, concessionalContributions), over);
 }
 
+/** Low Income Tax Offset (LITO) — up to $700: full to $37,500, −5c/$1 to
+    $45,000, then −1.5c/$1 to $66,667 (nil above). Non-refundable — it reduces
+    tax payable but not below nil, and does not reduce the Medicare levy. */
+export function lowIncomeTaxOffset(ti: number): number {
+  if (ti <= 37500) return 700;
+  if (ti <= 45000) return 700 - 0.05 * (ti - 37500);
+  if (ti <= 66667) return Math.max(0, 325 - 0.015 * (ti - 45000));
+  return 0;
+}
+
 /** VIC Vacant Residential Land Tax — escalating 1% / 2% / 3% of capital improved
     value by consecutive vacant year, for residential land vacant 6+ months
     (statewide from 1 Jan 2025). Separate from general land tax. */
@@ -70,6 +80,7 @@ export interface TaxData {
   marginalRate: Record<string, (ti: number) => number>;
   gstRate: number;
   cgtDiscount: { individual: number; company: number; smsf: number };
+  registrationFees?: Record<string, { transfer: number; mortgage: number }>;
   effectiveLives: [string, number][];
   /* --- 2026-budget structural levers (optional; a block without them behaves
      as the pre-budget regime) -------------------------------------------- */
@@ -110,6 +121,15 @@ export const TAX_DATA: TaxData = {
   foreignDuty: { NSW: .09, VIC: .08, QLD: .08, WA: .07, SA: .07, TAS: .08, ACT: .04, NT: 0 },
   foreignLandTax: { NSW: .05, VIC: .04, QLD: .03, WA: 0, SA: .005, TAS: .02, ACT: .0075, NT: 0 },
 
+  // Title transfer + mortgage registration fees — small fixed government charges,
+  // indicative; verify against each state's current LRS/titles schedule.
+  registrationFees: {
+    NSW: { transfer: 174, mortgage: 174 }, VIC: { transfer: 121, mortgage: 121 },
+    QLD: { transfer: 240, mortgage: 230 }, WA: { transfer: 220, mortgage: 220 },
+    SA: { transfer: 190, mortgage: 190 }, TAS: { transfer: 247, mortgage: 155 },
+    ACT: { transfer: 450, mortgage: 160 }, NT: { transfer: 165, mortgage: 165 },
+  },
+
   landTax: {
     NSW: (L) => L <= 1075000 ? 0 : L <= 6571000 ? 100 + .016 * (L - 1075000) : 88036 + .02 * (L - 6571000),
     VIC: (L) => L < 50000 ? 0 : L < 100000 ? 500 : L < 300000 ? 975 : bracket(L, [[600000, 1350, .003, 300000], [1000000, 2250, .006, 600000], [1800000, 4650, .009, 1000000], [3000000, 11850, .0165, 1800000], [Infinity, 31650, .0265, 3000000]]),
@@ -129,7 +149,7 @@ export const TAX_DATA: TaxData = {
     AU: (ti) => {
       const t = ti <= 18200 ? 0 : ti <= 45000 ? .15 * (ti - 18200) : ti <= 135000 ? 4020 + .30 * (ti - 45000)
         : ti <= 190000 ? 31020 + .37 * (ti - 135000) : 51370 + .45 * (ti - 190000);
-      return t + medicareLevy(ti); // + Medicare levy (2%, with low-income phase-in)
+      return Math.max(0, t - lowIncomeTaxOffset(ti)) + medicareLevy(ti); // tax − LITO (non-refundable), + Medicare levy
     },
   },
   marginalRate: {
@@ -171,7 +191,7 @@ export const TAX_DATA_2027_28: TaxData = {
     AU: (ti) => {
       const t = ti <= 18200 ? 0 : ti <= 45000 ? .14 * (ti - 18200) : ti <= 135000 ? 3752 + .30 * (ti - 45000)
         : ti <= 190000 ? 30752 + .37 * (ti - 135000) : 51102 + .45 * (ti - 190000);
-      return t + medicareLevy(ti);
+      return Math.max(0, t - lowIncomeTaxOffset(ti)) + medicareLevy(ti); // tax − LITO (non-refundable), + Medicare levy
     },
   },
   marginalRate: {
@@ -202,6 +222,14 @@ export function taxDataFor(dateISO?: string): TaxData {
   let chosen = sorted[0];
   for (const v of sorted) if (v.effectiveFrom <= d) chosen = v;
   return chosen;
+}
+
+/** Title transfer + mortgage registration fees total for a state (0 if unknown).
+    Small fixed government charges — indicative; verify against the current
+    LRS/titles schedule. */
+export function registrationFeesTotal(state: string): number {
+  const r = (TAX_DATA.registrationFees || {})[state];
+  return r ? r.transfer + r.mortgage : 0;
 }
 
 export interface Country {

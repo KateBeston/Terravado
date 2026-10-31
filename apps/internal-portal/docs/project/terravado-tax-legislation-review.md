@@ -6,7 +6,7 @@ _A comprehensive catalogue of the tax rules and legislation that touch **buying,
 
 ## 0.5 — ✅ THE 2026 STRUCTURAL SHIFT (now built in the engine)
 
-The 12 May 2026 Federal Budget and the mid-2026 super changes are the biggest reshaping of property-investment tax since the 1999 CGT discount. They are **structural** changes (new rule shapes, not just new numbers), and they are **now implemented as the `AU-2027-28` engine regime (built 1 Nov 2026)** — a future-dated tax-data block selected by date beside the current `AU-2026-27`, with date-aware, grandfathered rules. The big tax changes bite from 1 July 2027, but the SMSF borrowing ban and the APRA DTI cap are already live, so the current-FY engine stays correct while the new regime waits on its start dates. _(Remaining UI work: the main-site/portal property form needs a new-vs-established toggle and a visible purchase-date field wired to these rules so users can drive the regime.)_
+The 12 May 2026 Federal Budget and the mid-2026 super changes are the biggest reshaping of property-investment tax since the 1999 CGT discount. They are **structural** changes (new rule shapes, not just new numbers), and they are **now implemented as the `AU-2027-28` engine regime (built 1 Nov 2026)** — a future-dated tax-data block selected by date beside the current `AU-2026-27`, with date-aware, grandfathered rules. The big tax changes bite from 1 July 2027, but the SMSF borrowing ban and the APRA DTI cap are already live, so the current-FY engine stays correct while the new regime waits on its start dates. _(The property form's new-vs-established toggle + purchase-date field drive the regime — built 1 Nov 2026.)_
 
 **1. Negative gearing — restricted, from 1 July 2027. ✅ Built.**
 - Going forward it is **limited to new residential builds**. For **established** dwellings bought *after* budget night (12 May 2026), rental losses can no longer offset wage/salary income — they are **quarantined**, carried forward against future rental income or capital gains only.
@@ -35,7 +35,7 @@ The PIA changelog is the clearest possible brief: almost every release is _"upda
 
 > Every rate and threshold lives in **one versioned data layer**, dated by financial year, with prior versions retained for historical reproducibility — never scattered as literals through the engine.
 
-Terravado already does this: `src/lib/engine/tax-data.ts`, versioned `AU-2026-27` with `AU-2027-28` now beside it and a `taxDataFor(date)` selector, per-state functions for duty and land tax, and prior versions retained. The work is to **keep it current and widen its coverage**, backing every figure with a known-answer assurance check so a wrong update is caught in CI (we currently have **59** such checks, up from 40 with the AU-2027-28 regime).
+Terravado already does this: `src/lib/engine/tax-data.ts`, versioned `AU-2026-27` with `AU-2027-28` now beside it and a `taxDataFor(date)` selector, per-state functions for duty and land tax, and prior versions retained. The work is to **keep it current and widen its coverage**, backing every figure with a known-answer assurance check so a wrong update is caught in CI (we currently have **66** such checks, grown from 40 as the AU-2027-28 regime, LITO, registration fees and borrowing-cost amortisation were added).
 
 **Recommended maintenance cadence (the PIA discipline, formalised):**
 - **Each July** — update federal income tax scales, Medicare levy + thresholds, Medicare Levy Surcharge, Division 293, LITO, effective-life reviews.
@@ -58,7 +58,7 @@ Progressive ad valorem duty on the dutiable value (contract price or market valu
 
 ### 1.2 Title transfer & mortgage registration fees — **STATE**
 Fixed or lightly-scaled government fees on registering the transfer and the mortgage.
-- **Need:** a `registrationFees` table per state (transfer fee + mortgage registration fee), small dollar amounts but real acquisition costs that belong in the cash-in and the cost base.
+- **Have (opt-in):** `registrationFees` per state + `registrationFeesTotal()`, added to the acquisition cash-in and cost base when the "auto registration fees" flag is set (off by default so it doesn't double-count a manual line). Figures are indicative — verify per state LRS.
 
 ### 1.3 Foreign Investment Review Board (FIRB) — **FEDERAL**
 - Foreign persons generally need **FIRB approval** to buy residential property; **application fees scale with value**.
@@ -68,7 +68,7 @@ Fixed or lightly-scaled government fees on registering the transfer and the mort
 
 ### 1.4 Acquisition items that feed later calculations
 - **Cost-base builders (for CGT):** duty, legals, buyer's-agent fee, building & pest, search fees, improvements.
-- **Borrowing costs** (loan application, LMI, mortgage registration, valuation, lender's legals) — **deductible over 5 years** or the loan term if shorter (s25-25). **Need:** 5-year borrowing-cost amortisation (engine currently treats LMI as capitalised).
+- **Borrowing costs** (loan application, LMI, mortgage registration, valuation, lender's legals) — **deductible over 5 years** or the loan term if shorter (s25-25). **Have (opt-in):** `borrowingCostAmortisation()` deducts a `loan.borrowingCosts` figure over 5 years (or the term if shorter).
 
 ---
 
@@ -80,7 +80,7 @@ Assessable in full; **apportioned for any private use**; holiday-letting and "av
 ### 2.2 Deductions — **FEDERAL**
 - **Interest / negative gearing** — deductible against other income for **individuals & partnerships**; **losses trapped** in companies, trusts and SMSFs. **Have:** `taxProfile` encodes this per entity type. **✅ 2027-28 restriction built (§0.5):** losses on post-12-May-2026 established dwellings are quarantined from FY2027-28 even for individuals.
 - **Repairs & maintenance** (immediate, s25-10) **vs capital improvements** (Div 43 or cost base). PIA cites **TR 2021/D5** on house-and-land. **Need:** a repairs-vs-capital classification.
-- **Vacant-land holding-cost denial (s26-102, from 1 July 2019):** interest, rates and land tax on **vacant land are not deductible** until a substantial, usable structure exists and is rented/available. **Need:** a vacant-land flag.
+- **Vacant-land holding-cost denial (s26-102, from 1 July 2019):** interest, rates and land tax on **vacant land are not deductible** until a substantial, usable structure exists and is rented/available. **Have (opt-in):** a `tax.vacantLand` flag denies holding-cost deductions in the projection while set.
 - **Other deductible holding costs:** council & water rates, insurance, strata, property-management fees, land tax, letting fees, pest/garden, depreciation. **Have.**
 
 ### 2.3 Depreciation — **FEDERAL**
@@ -106,7 +106,7 @@ Annual tax on **unimproved land value**, **aggregated per owner per state**. PPO
 ### 2.6 Income tax scales & offsets — **FEDERAL**
 - **2026-27 resident scale (current FY):** nil to $18,200; **15%** $18,201–45,000; 30% $45,001–135,000; 37% $135,001–190,000; 45% $190,001+. **Have:** engine on `AU-2026-27`.
 - **Legislated further cut: 14% from 1 July 2027** — **✅ built** in `AU-2027-28` (date-selected).
-- **Low Income Tax Offset (LITO)** — up to $700. **Need.**
+- **Low Income Tax Offset (LITO)** — up to $700. **Have:** `lowIncomeTaxOffset()` applied in both scale versions (non-refundable, nil above ~$66,667).
 
 ---
 
@@ -150,10 +150,10 @@ The same property is taxed differently by owner. **Have:** `taxProfile` differen
 | Date | Change | Jurisdiction | Engine status |
 |---|---|---|---|
 | 9 May 2017 | Second-hand plant depreciation denied (residential) | Federal | modelled |
-| 1 Jul 2019 | Vacant-land holding-cost deductions denied (s26-102) | Federal | **gap** |
+| 1 Jul 2019 | Vacant-land holding-cost deductions denied (s26-102) | Federal | **built (opt-in flag)** |
 | 1 Jan 2025 | FRCGW → 15%, threshold removed, all sales | Federal | modelled |
 | 1 Jan 2025 | VIC Vacant Residential Land Tax statewide | VIC | modelled |
-| 2024–2033 | VIC COVID-debt land-tax surcharge ($50k threshold) | VIC | **gap** |
+| 2024–2033 | VIC COVID-debt land-tax surcharge ($50k threshold) | VIC | **gap (not year-bounded)** |
 | 1 Apr 2025 – 31 Mar 2027 | Foreign ban on established dwellings | Federal | modelled |
 | 1 Feb 2026 | APRA DTI cap: ≤20% of new loans at DTI ≥ 6 | Federal (APRA) | **built (flag)** |
 | 1 Jul 2026 | Lowest bracket 16% → 15% | Federal | modelled (AU-2026-27) |
@@ -167,16 +167,16 @@ The same property is taxed differently by owner. **Have:** `taxProfile` differen
 
 ## 7. HAVE vs NEED — and the build priority
 
-**Already in the engine:** per-state transfer duty; FHB concessions (partial); foreign purchaser duty surcharge; per-state land tax **with aggregation**; foreign land-tax surcharge; NSW trust surcharge; VIC VRLT; income tax + marginal rates (**2026-27**); Medicare levy thresholds + MLS + Division 293; GST + margin scheme (feasibility); **full CGT/disposal engine** (discount by entity, main-residence, losses, FRCGW); Div 43 + Div 40 depreciation with the 2017 rule; effective lives; **FIRB/foreign-investor overlay**; entity-aware treatment; **and the full `AU-2027-28` regime** — date-aware negative-gearing quarantining, CGT indexation + 30% floor with the new-property election and 1 Jul 2027 straddle split, SMSF residential-LRBA ban, APRA DTI≥6 flag, 14% bottom bracket. **59 assurance checks.**
+**Already in the engine:** per-state transfer duty; FHB concessions (partial); foreign purchaser duty surcharge; per-state land tax **with aggregation**; foreign land-tax surcharge; NSW trust surcharge; VIC VRLT; income tax + marginal rates (**2026-27**); Medicare levy thresholds + MLS + Division 293; GST + margin scheme (feasibility); **full CGT/disposal engine** (discount by entity, main-residence, losses, FRCGW); Div 43 + Div 40 depreciation with the 2017 rule; effective lives; **FIRB/foreign-investor overlay**; entity-aware treatment; **and the full `AU-2027-28` regime** — date-aware negative-gearing quarantining, CGT indexation + 30% floor with the new-property election and 1 Jul 2027 straddle split, SMSF residential-LRBA ban, APRA DTI≥6 flag, 14% bottom bracket; the dwelling-type UI that drives the regime; **LITO; per-state registration fees (opt-in); borrowing-cost 5-year amortisation (opt-in); vacant-land holding-cost denial (opt-in).** **66 assurance checks.**
 
 **Gaps, in recommended build order:**
-1. **UI to drive the AU-2027-28 regime** — a new-vs-established toggle and a visible purchase-date field on the property form, wired to the regime rules, so users actually trigger the new treatment. _(Small–medium; the engine is ready and waiting on this.)_
-2. **Registration/transfer fees per state** — acquisition-cost completeness. _(Small.)_
-3. **Land-tax completeness** — VIC COVID levy, VIC absentee trust surcharge. _(Medium.)_
-4. **Borrowing-cost 5-year amortisation; vacant-land holding-cost denial; repairs-vs-capital.** _(Medium.)_
-5. **GST withholding at settlement.** _(Medium.)_
-6. **SMSF guardrails** — in-house/NALI/sole-purpose warnings (flag, don't advise). _(Medium.)_
-7. **LITO; First Home Super Saver / Home Guarantee hooks; build-to-rent.** _(Small / niche.)_
+1. **Land-tax completeness** — the VIC trust surcharge scale + absentee trust surcharge (needs the SRO Victoria scale); year-aware land tax so temporary levies (VIC COVID) reproduce by FY. _(Medium.)_
+2. **Repairs vs capital improvements** classification (s25-10 vs Div 43 / cost base). _(Medium.)_
+3. **GST withholding at settlement.** _(Medium.)_
+4. **SMSF guardrails** — in-house/NALI/sole-purpose warnings (flag, don't advise). _(Medium.)_
+5. **First Home Super Saver / Home Guarantee hooks; build-to-rent.** _(Small / niche.)_
+
+_(The live cross-project backlog is `terravado-backlog.md`.)_
 
 ---
 
@@ -184,8 +184,8 @@ The same property is taxed differently by owner. **Have:** `taxProfile` differen
 
 - **Keep one versioned `TAX_DATA` per financial year** — now `AU-2026-27` and `AU-2027-28`, selected by date, so the old and new regimes coexist and the engine picks the right one (this is what gives grandfathering and transition for free). Add future FYs the same way.
 - **Two kinds of change, two mechanisms:** *parametric* (rate/threshold moves) = data edit + assurance re-check; *structural* (new rule shape, e.g. NG quarantining, CGT indexation) = regulatory-watch alert → human build-out. The AU-2027-28 regime is the first worked example of the structural path.
-- **Drive rules off record flags:** entity type, foreign-person status, deed-excludes-foreign, PPOR/6-year, vacant land, **new-vs-established**, **acquisition date**, held-in-SMSF — captured on the contact/entity/property records so the right rules fire automatically. (New/established + acquisition date are the fields the UI still needs to surface — gap #1.)
-- **Extend assurance:** one known-answer check per new bracket/threshold/rule — now 59.
+- **Drive rules off record flags:** entity type, foreign-person status, deed-excludes-foreign, PPOR/6-year, vacant land, **new-vs-established**, **acquisition date**, held-in-SMSF — captured on the contact/entity/property records so the right rules fire automatically. (New/established + acquisition date are now surfaced on the property form, driving the rules.)
+- **Extend assurance:** one known-answer check per new bracket/threshold/rule — now 66.
 - **Provenance everywhere:** every figure stamped with source + effective date.
 - **Compliance perimeter:** **general information, not tax or financial-product advice** — keep the disclaimer; treat SMSF/structuring outputs as flags for a licensed professional, especially on the public site.
 

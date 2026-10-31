@@ -1,30 +1,41 @@
-UI: dwelling-type toggle drives the AU-2027-28 regime (+ doc refresh)
+Engine: legislation gaps — LITO, registration fees, borrowing costs, vacant land
 
-Surfaces the one field the engine needed to trigger the 2026-budget rules for
-users, and refreshes the legislation review to mark the regime built.
+Closes a batch of the tax-legislation gaps. All additive and inert by default,
+so existing records and the seed model are unchanged unless the new fields/flags
+are set.
 
-Property form (both apps — PropertyInputs.tsx, kept identical)
-- New "Dwelling type" select (Established / New build) writing entry.propertyType,
-  placed beside the existing Purchase date in Market & growth, with a hint
-  explaining what the pair drives. "Established" is the empty-default (the engine
-  treats anything that isn't "new" as established), so existing records are
-  unaffected until explicitly set.
-- With purchase date (already in the form), marking a post-12-May-2026 established
-  dwelling now fires the negative-gearing quarantine in the projection cashflow
-  and the regime flags in the verdict.
+tax-data.ts
+- lowIncomeTaxOffset() (LITO, up to $700, non-refundable, nil above ~$66,667),
+  applied in both the 2026-27 and 2027-28 income-tax scales. Nil at the existing
+  check incomes, so those figures are unchanged.
+- registrationFees per state + registrationFeesTotal() — small fixed title
+  transfer + mortgage registration charges (indicative; verify per LRS).
+
+engine.ts
+- borrowingCostAmortisation() — s25-25 borrowing costs deducted over 5 years (or
+  the loan term if shorter); driven by a new loan.borrowingCosts field.
+- acquisition(): opt-in auto registration fees (entry.autoRegistrationFees) added
+  to cash-in + cost base; off by default to avoid double-counting a manual line.
+- project(): borrowing-cost deduction in the tax calc; vacant-land holding-cost
+  denial (s26-102) via tax.vacantLand — when set, holding-cost deductions are
+  denied until a usable structure exists and is rented.
+
+Property form (both apps, kept identical)
+- Acquisition: "Auto registration fees (per state)" checkbox (+ amount hint).
+- Loan: "Borrowing costs (deductible over 5 yrs, s25-25)" field.
+- Tax & land tax: "Vacant land (holding costs non-deductible, s26-102)" checkbox.
 
 Docs
-- apps/internal-portal/docs/project/terravado-tax-legislation-review.md refreshed:
-  §0.5 + the §6 table + §7 now mark the AU-2027-28 regime built, assurance 40 -> 59,
-  and the UI toggle moved off the gap list. (Canonical copy also updated in the
-  Claude project.)
+- terravado-tax-legislation-review.md refreshed (both the Claude project copy and
+  the repo copy): these items marked built, dwelling-type UI marked built,
+  assurance count → 66, §6 table + §7 gap list updated.
+- Added terravado-backlog.md — the live cross-project tracker of done / in-flight
+  / recommended-not-built — to the project and the repo docs/ index.
 
-Known limitation (follow-up): the projection's inline exit-CGT still uses the
-50%-discount approximation; the full indexed-floor regime lives in disposalCgt()
-and is assurance-tested, but project() does not yet call it for a post-2027
-established sale. Wiring that is the next CGT increment.
+Assurance: +6 checks (60 -> 66) — LITO at $40k; NSW & QLD registration-fee totals;
+borrowing-cost amortisation (5-yr, short-term, after-window).
 
-Verified: engine 59/59; both apps tsc clean; both production builds green.
+Verified: engine 66/66; both apps tsc clean; both production builds green.
 
 Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_015DMV1vb1QzHwYuwMuVbkoV
