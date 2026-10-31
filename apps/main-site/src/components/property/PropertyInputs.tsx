@@ -52,6 +52,8 @@ export default function PropertyInputs({ p, R, ctx, update, open, toggle }: {
           {F("Purchase price", "market.price", { prov: (p.market.provenance || {}).price })}
           {F("Purchase date", "market.purchaseDate", { type: "date" })}
         </div>
+        {F("Dwelling type", "entry.propertyType", { type: "select", options: [["", "Established"], ["new", "New build"]] })}
+        <div className="hint">New vs established — with the purchase date — drives the 2027-28 rules: an established dwelling bought after 12 May 2026 loses the wage-income negative-gearing offset from FY2027-28 and moves to the indexed CGT method; a new build keeps the offset and can elect the 50% discount.</div>
         <div className="r2">{F("Suburb median", "market.suburbMedian")}{F(`Median rent / ${C.rentPer}`, "market.suburbMedianRent")}</div>
         <div className="r2">
           {F(`Land rate / ${C.area}`, "market.landRate", { prov: (p.market.provenance || {}).landRate })}
