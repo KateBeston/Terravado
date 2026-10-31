@@ -1,32 +1,34 @@
-Security: upgrade the Supabase stack (ssr 0.5.2 -> 0.12.7, supabase-js 2.45.4 -> 2.118.0)
+Docs: store project/governance docs in the portal + 2026 budget legislation update
 
-Closes the @supabase/auth-js "insecure path routing from malformed input"
-advisory, which couldn't be fixed by bumping supabase-js alone — the patched
-supabase-js needs a matching @supabase/ssr, so both move together. This is the
-coordinated stack upgrade, done and tested rather than rushed as a one-liner.
+Stores the full set of Terravado strategy, architecture, compliance and
+competitive docs in the repo so they travel with the code and the internal
+portal, and updates the tax-legislation review for the 2026 Federal Budget.
 
-Changed
-- @supabase/ssr 0.5.2 -> 0.12.7 and @supabase/supabase-js 2.45.4 -> 2.118.0 in
-  both apps and the @terravado/core peer deps.
-- No app code changes needed: the cookie integration already uses the modern
-  getAll/setAll pattern (packages/core/src/supabase/{server,middleware,client}.ts),
-  which is unchanged across 0.5 -> 0.12, and on Next 14 cookies() stays synchronous.
-  Once ssr and supabase-js were aligned, the types resolved cleanly.
+New: apps/internal-portal/docs/project/ (15 docs + README index)
+- Strategy/product: business-plan, target-architecture, platform-portal-
+  features-and-modelling, data-strategy, account-model, bank-data-strategy,
+  stock-and-advisor-module.
+- Compliance/accuracy: tax-legislation-review, regulatory-compliance-review,
+  accuracy-and-assurance-safeguards.
+- Competitive/commercial: htag-vs-terravado-teardown, htag-licence-assessment,
+  ash-dino-questions-and-deal-terms.
+- Parked: project-marketing-platform-idea, future-partnerships.
+These mirror the canonical copies in the Claude project workspace; keep both
+in sync when either changes.
 
-Verified
-- auth-js advisory cleared in npm audit; total vulns down (23 -> 21).
-- Both apps: tsc clean; next build green; booted on the new stack — /, /login,
-  /modeller, /properties/[id]/foreign all 200, engine computes $105,600, no ssr
-  or import errors. Engine 40/40.
-
-Remaining audit items (unchanged, known): next's bundled postcss (build-time) and
-glob/minimatch (dev/build tooling). Only a Next 16 major clears those — a separate
-decision.
-
-Note: dev mode bypasses Supabase (IS_SUPABASE_CONFIGURED=false), so the live
-sign-in/session flow isn't exercised locally. The client modules load and the API
-is unchanged, but worth a quick manual login on the Vercel preview after deploy to
-confirm the session round-trip end to end.
+Legislation update (the 2026 structural shift), captured in the tax review:
+- Negative gearing limited to new builds from 1 Jul 2027; losses on
+  established dwellings bought after 12 May 2026 quarantined (grandfathered
+  before budget night).
+- CGT 50% discount replaced from 1 Jul 2027 by cost-base indexation + a 30%
+  minimum effective rate on established property (new property may elect the
+  50% discount); dual regime splits a gain straddling the start date.
+- SMSF new residential LRBAs banned, live from 10 Aug 2026 (business real
+  property still allowed; existing LRBAs grandfathered).
+- APRA DTI cap (<=20% of new loans at DTI >= 6) from 1 Feb 2026; 3% buffer held.
+All four are flagged as the forthcoming AU-2027-28 engine regime (date-aware,
+grandfathered rules beside the current AU-2026-27). No engine/code change in
+this commit — docs only; the current-FY engine stays correct.
 
 Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_015DMV1vb1QzHwYuwMuVbkoV
