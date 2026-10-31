@@ -173,6 +173,8 @@ export default function PropertyInputs({ p, R, ctx, update, open, toggle }: {
         {F("First home buyer", "entry.firstHomeBuyer", { type: "checkbox" })}
         {F("Foreign purchaser", "entry.foreignBuyer", { type: "checkbox" })}
         {F("Capitalise LMI into the loan", "entry.capitaliseLmi", { type: "checkbox" })}
+        {F("Auto registration fees (per state)", "entry.autoRegistrationFees", { type: "checkbox" })}
+        {R.acq.regFees > 0 && <div className="hint">Registration fees {money(R.acq.regFees)} added ({p.loc.region} transfer + mortgage).</div>}
         {R.acq.fhbRelief > 0 && <div className="hint">FHB concession {money(R.acq.fhbRelief)} applied ({p.loc.region} schedule).</div>}
         {R.acq.surcharge > 0 && <div className="hint">Foreign surcharge {money(R.acq.surcharge)}.</div>}
         <div className="eyebrow">Itemised costs</div>
@@ -217,6 +219,8 @@ export default function PropertyInputs({ p, R, ctx, update, open, toggle }: {
         {F("Income-producing share of the loan %", "loan.purposeSplit", { type: "range", min: 0, max: 100, meta: p.loan.purposeSplit + "% deductible" })}
         <div className="hint">Deductibility follows the <b>purpose</b> of the borrowing, not the security. If part of the drawing funded a private purchase, that interest is not deductible.</div>
         <div className="r2">{F("Package fee (pa)", "loan.annualPackageFee")}{F("Discharge fee", "loan.dischargeFee")}</div>
+        {F("Borrowing costs (deductible over 5 yrs, s25-25)", "loan.borrowingCosts")}
+        <div className="hint">Loan establishment, LMI, mortgage registration, valuation and lender's legals are deductible over 5 years (or the loan term if shorter).</div>
         {R.rolloverShock && <div className="warn" style={{ marginTop: 8 }}><b>Rollover shock, year {R.rolloverShock.year}.</b> Monthly repayment {money(R.rolloverShock.from)} → {money(R.rolloverShock.to)} (+{R.rolloverShock.pct}%).</div>}
       </>)}
 
@@ -287,6 +291,8 @@ export default function PropertyInputs({ p, R, ctx, update, open, toggle }: {
         <div className="hint">Assessed: <b>{money(portfolioLandTax(1, ctx).byProp[p.id] || 0)}</b> · standalone would be {money(standaloneLandTax(p, 1))}</div>
         {F("PAYG withholding variation", "tax.paygVariation", { type: "checkbox" })}
         <div className="hint">Spreads the refund across the year instead of a lump sum at tax time. Changes weekly affordability materially.</div>
+        {F("Vacant land (holding costs non-deductible, s26-102)", "tax.vacantLand", { type: "checkbox" })}
+        {p.tax.vacantLand && <div className="hint">Interest, rates and land tax on vacant residential land are not deductible until a substantial, usable structure exists and is rented or available.</div>}
       </>)}
 
       {P("ev", "Journey — events & infrastructure", `${(p.events || []).length} / ${(p.projects || []).length}`, <>
