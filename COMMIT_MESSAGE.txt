@@ -1,20 +1,32 @@
-CI: correct the Assurance workflow for the monorepo
+Security: upgrade the Supabase stack (ssr 0.5.2 -> 0.12.7, supabase-js 2.45.4 -> 2.118.0)
 
-The "Assurance" workflow was written for the old single-app layout (root
-verify:engine / lint / build) and failed after the monorepo restructure. This
-replaces it with a single root workflow for the workspace.
+Closes the @supabase/auth-js "insecure path routing from malformed input"
+advisory, which couldn't be fixed by bumping supabase-js alone — the patched
+supabase-js needs a matching @supabase/ssr, so both move together. This is the
+coordinated stack upgrade, done and tested rather than rushed as a one-liner.
 
-- Added .github/workflows/assurance.yml at the REPO ROOT (GitHub only runs
-  workflows from the root). Installs the workspace once (npm ci), then runs the
-  three gates that catch real regressions: engine assurance checks (npm run
-  verify), typecheck of both apps, and a production build of each app.
-- Removed the stale per-app workflow copies under apps/*/.github (GitHub ignores
-  non-root .github, so they were inert and confusing).
-- Dropped the Lint step: the apps have no ESLint config, so `next lint` prompts
-  interactively and fails in CI. Re-add once an eslint config is in place.
+Changed
+- @supabase/ssr 0.5.2 -> 0.12.7 and @supabase/supabase-js 2.45.4 -> 2.118.0 in
+  both apps and the @terravado/core peer deps.
+- No app code changes needed: the cookie integration already uses the modern
+  getAll/setAll pattern (packages/core/src/supabase/{server,middleware,client}.ts),
+  which is unchanged across 0.5 -> 0.12, and on Next 14 cookies() stays synchronous.
+  Once ssr and supabase-js were aligned, the types resolved cleanly.
 
-Verified locally: npm run verify = 40/40; npm run typecheck (both apps) clean;
-both apps build green.
+Verified
+- auth-js advisory cleared in npm audit; total vulns down (23 -> 21).
+- Both apps: tsc clean; next build green; booted on the new stack — /, /login,
+  /modeller, /properties/[id]/foreign all 200, engine computes $105,600, no ssr
+  or import errors. Engine 40/40.
+
+Remaining audit items (unchanged, known): next's bundled postcss (build-time) and
+glob/minimatch (dev/build tooling). Only a Next 16 major clears those — a separate
+decision.
+
+Note: dev mode bypasses Supabase (IS_SUPABASE_CONFIGURED=false), so the live
+sign-in/session flow isn't exercised locally. The client modules load and the API
+is unchanged, but worth a quick manual login on the Vercel preview after deploy to
+confirm the session round-trip end to end.
 
 Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_015DMV1vb1QzHwYuwMuVbkoV
